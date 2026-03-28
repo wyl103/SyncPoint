@@ -1,0 +1,33 @@
+# Seguridad: Nunca subir las credenciales
+.env
+
+# Binarios pesados y programas
+*.exe
+tailwindcss
+
+# Archivos comprimidos (ya están extraídos)
+*.zip
+*.rar
+
+# Archivos de configuración de sistema y editores
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+
+# Carpetas de dependencias (en caso de que uses composer/npm)
+vendor/
+node_modules/
+
+# Logs y temporales
+*.log
+tmp/
+
+# --- Librerías de iconos y fuentes (Trabajo offline) ---
+fontawesome-free-7.2.0-web/
+public/fonts/
+public/fontawesome/
+*.zip
+
+# --- Binarios y Seguridad ---
+tailwindcss.exe

@@ -1,0 +1,7 @@
+RewriteEngine On
+RewriteBase /app_bless/public/
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+# Cambiamos index.html por index.php
+RewriteRule ^ index.php [QSA,L]
