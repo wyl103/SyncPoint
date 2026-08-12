@@ -9,8 +9,8 @@ class ClienteService {
         $this->clienteModel = new Cliente();
     }
 
-    public function listarClientes($busqueda = null, $rutaId = null, $sucursalId = null, $estado = null) {
-        return $this->clienteModel->getAll($busqueda, $rutaId, $sucursalId, $estado);
+    public function listarClientes($busqueda = null, $rutaId = null, $sucursalId = null, $estado = null, $page = 1, $limit = 10) {
+        return $this->clienteModel->getAll($busqueda, $rutaId, $sucursalId, $estado, $page, $limit);
     }
 
     public function obtenerCliente($id) {

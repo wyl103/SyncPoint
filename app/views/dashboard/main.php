@@ -85,26 +85,53 @@
             </div>
         </div>
 
-        <!-- Barra de Búsqueda y Filtros de Clientes -->
-        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm space-y-3">
-            <div class="relative">
-                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
-                <input id="input-buscar-cliente" type="text" oninput="filtrarClientesDebounced()" placeholder="Buscar cliente por nombre o número de WhatsApp..." class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm font-semibold text-charcoal outline-none focus:border-primary focus:bg-white transition">
+        <!-- Barra de Búsqueda y Filtros de Clientes (Horizontal y Compacta) -->
+        <div class="client-filters-container">
+            <!-- Input de Búsqueda Principal -->
+            <div class="client-search-box">
+                <span class="material-symbols-outlined client-search-icon">search</span>
+                <input id="input-buscar-cliente" type="text" oninput="filtrarClientesDebounced()" placeholder="Buscar cliente por nombre, teléfono o ID..." class="client-search-input">
             </div>
 
-            <div class="flex flex-col md:flex-row gap-3">
-                <div class="flex-1">
-                    <label class="block text-xs font-bold text-gray-500 mb-1">Sucursal / Zona</label>
-                    <select id="filtro-cliente-sucursal" onchange="cargarClientes()" class="w-full p-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-700 outline-none focus:border-primary focus:bg-white transition">
+            <!-- Selector de Filtros Horizontales (4 columnas en PC) -->
+            <div class="client-filters-grid">
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-500 mb-1 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[15px] text-gray-400">store</span> Sucursal
+                    </label>
+                    <select id="filtro-cliente-sucursal" onchange="alCambiarSucursalCliente()" class="client-select-control">
                         <option value="todas">Todas las sucursales</option>
                     </select>
                 </div>
-                <div class="flex-1">
-                    <label class="block text-xs font-bold text-gray-500 mb-1">Estado</label>
-                    <select id="filtro-cliente-estado" onchange="cargarClientes()" class="w-full p-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-700 outline-none focus:border-primary focus:bg-white transition">
+
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-500 mb-1 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[15px] text-primary">route</span> Ruta / Zona
+                    </label>
+                    <select id="filtro-cliente-ruta" onchange="cargarClientes(1)" class="client-select-control">
+                        <option value="todas">Todas las rutas</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-500 mb-1 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[15px] text-gray-400">label</span> Estado
+                    </label>
+                    <select id="filtro-cliente-estado" onchange="cargarClientes(1)" class="client-select-control">
                         <option value="todos">Todos los estados</option>
                         <option value="agendado">Agendado</option>
                         <option value="no agendado">No Agendado</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-500 mb-1 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[15px] text-gray-400">format_list_numbered</span> Mostrar
+                    </label>
+                    <select id="filtro-cliente-limit" onchange="cargarClientes(1)" class="client-select-control">
+                        <option value="10">10 por pág.</option>
+                        <option value="50">50 por pág.</option>
+                        <option value="100">100 por pág.</option>
                     </select>
                 </div>
             </div>
@@ -112,5 +139,27 @@
 
         <!-- Lista de Clientes -->
         <div id="lista-clientes" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+
+        <!-- Contenedor de Paginación -->
+        <div id="paginacion-clientes-container" class="hidden mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+            <p id="paginacion-info-texto" class="text-xs font-semibold text-gray-500 text-center sm:text-left">
+                Mostrando <span id="paginacion-rango-inicio" class="font-bold text-charcoal">0</span> a <span id="paginacion-rango-fin" class="font-bold text-charcoal">0</span> de <span id="paginacion-total-registros" class="font-bold text-charcoal">0</span> clientes
+            </p>
+
+            <div class="flex items-center gap-2">
+                <button id="btn-pagina-prev" onclick="cambiarPaginaCliente(-1)" class="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition">
+                    <span class="material-symbols-outlined text-[16px]">chevron_left</span> Anterior
+                </button>
+
+                <span class="text-xs font-bold text-gray-600 px-2">
+                    Pág. <span id="paginacion-pagina-actual">1</span> de <span id="paginacion-total-paginas">1</span>
+                </span>
+
+                <button id="btn-pagina-next" onclick="cambiarPaginaCliente(1)" class="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition">
+                    Siguiente <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                </button>
+            </div>
+        </div>
     </div>
+
 </main>

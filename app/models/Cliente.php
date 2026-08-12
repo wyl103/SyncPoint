@@ -10,52 +10,78 @@ class Cliente {
         $this->pdo = $db->getConnection();
     }
 
-    public function getAll($busqueda = null, $rutaId = null, $sucursalId = null, $estado = null) {
-        $sql = "SELECT 
-                    c.id, 
-                    c.nombre, 
-                    c.telefono_whatsapp, 
-                    c.frecuencia_id, 
-                    c.ruta_id, 
-                    c.estado,
-                    r.nombre AS ruta_nombre,
-                    r.ciudad AS ruta_ciudad,
-                    s.id AS sucursal_id,
-                    s.nombre AS sucursal_nombre,
-                    f.nombre AS frecuencia_nombre
-                FROM clientes c
-                LEFT JOIN rutas r ON c.ruta_id = r.id
-                LEFT JOIN sucursales s ON r.fk_sucursal = s.id
-                LEFT JOIN frecuencias f ON c.frecuencia_id = f.id
-                WHERE 1=1";
+    public function getAll($busqueda = null, $rutaId = null, $sucursalId = null, $estado = null, $page = 1, $limit = 10) {
+        $whereSql = " FROM clientes c
+                      LEFT JOIN rutas r ON c.ruta_id = r.id
+                      LEFT JOIN sucursales s ON r.fk_sucursal = s.id
+                      LEFT JOIN frecuencias f ON c.frecuencia_id = f.id
+                      WHERE 1=1";
         
         $params = [];
 
         if (!empty($busqueda)) {
-            $sql .= " AND (c.nombre ILIKE :busqueda OR c.telefono_whatsapp ILIKE :busqueda)";
+            $whereSql .= " AND (c.nombre ILIKE :busqueda OR c.telefono_whatsapp ILIKE :busqueda)";
             $params['busqueda'] = '%' . $busqueda . '%';
         }
 
         if (!empty($rutaId) && $rutaId !== 'todas') {
-            $sql .= " AND c.ruta_id = :ruta_id";
+            $whereSql .= " AND c.ruta_id = :ruta_id";
             $params['ruta_id'] = $rutaId;
         }
 
         if (!empty($sucursalId) && $sucursalId !== 'todas') {
-            $sql .= " AND r.fk_sucursal = :sucursal_id";
+            $whereSql .= " AND r.fk_sucursal = :sucursal_id";
             $params['sucursal_id'] = $sucursalId;
         }
 
         if (!empty($estado) && $estado !== 'todos') {
-            $sql .= " AND c.estado::text = :estado";
+            $whereSql .= " AND c.estado::text = :estado";
             $params['estado'] = $estado;
         }
 
-        $sql .= " ORDER BY c.nombre ASC";
+        // 1. Contador total de coincidencias
+        $countSql = "SELECT COUNT(c.id)" . $whereSql;
+        $stmtCount = $this->pdo->prepare($countSql);
+        $stmtCount->execute($params);
+        $totalRows = (int)$stmtCount->fetchColumn();
 
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute($params);
-        return $stmt->fetchAll();
+        // 2. Parámetros de Paginación
+        $page = max(1, (int)$page);
+        $limit = in_array((int)$limit, [10, 50, 100]) ? (int)$limit : 10;
+        $offset = ($page - 1) * $limit;
+
+        // 3. Consulta de Datos
+        $dataSql = "SELECT 
+                        c.id, 
+                        c.nombre, 
+                        c.telefono_whatsapp, 
+                        c.frecuencia_id, 
+                        c.ruta_id, 
+                        c.estado,
+                        r.nombre AS ruta_nombre,
+                        r.ciudad AS ruta_ciudad,
+                        s.id AS sucursal_id,
+                        s.nombre AS sucursal_nombre,
+                        f.nombre AS frecuencia_nombre" 
+                    . $whereSql . 
+                    " ORDER BY c.nombre ASC LIMIT :limit OFFSET :offset";
+
+        $stmtData = $this->pdo->prepare($dataSql);
+        foreach ($params as $key => $val) {
+            $stmtData->bindValue(':' . $key, $val);
+        }
+        $stmtData->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmtData->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmtData->execute();
+        $rows = $stmtData->fetchAll();
+
+        return [
+            'data' => $rows,
+            'total' => $totalRows,
+            'page' => $page,
+            'limit' => $limit,
+            'total_pages' => $limit > 0 ? (int)ceil($totalRows / $limit) : 1
+        ];
     }
 
     public function getById($id) {

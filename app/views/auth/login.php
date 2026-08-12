@@ -1,4 +1,4 @@
-<div id="view-login" class="hidden-view flex flex-col items-center justify-center h-full w-full p-6 bg-background-light absolute z-50">
+<div id="view-login" class="flex flex-col items-center justify-center h-full w-full p-6 bg-background-light absolute z-50">
     <div class="w-full max-w-sm space-y-6 bg-white p-8 rounded-2xl shadow-lg border border-gray-200">
         <div class="text-center">
             <span class="material-symbols-outlined text-primary text-5xl mb-2 filled">water_drop</span>

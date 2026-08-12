@@ -9,8 +9,8 @@ class ClienteController {
         $this->service = new ClienteService();
     }
 
-    public function index($busqueda = null, $rutaId = null, $sucursalId = null, $estado = null) {
-        return $this->service->listarClientes($busqueda, $rutaId, $sucursalId, $estado);
+    public function index($busqueda = null, $rutaId = null, $sucursalId = null, $estado = null, $page = 1, $limit = 10) {
+        return $this->service->listarClientes($busqueda, $rutaId, $sucursalId, $estado, $page, $limit);
     }
 
     public function show($id) {
