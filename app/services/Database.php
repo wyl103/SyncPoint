@@ -15,7 +15,7 @@ class Database {
             $pass = $env['DB_PASS'];
             $charset = 'utf8mb4';
 
-            $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+            $dsn = "pgsql:host=$host;port=5432;dbname=$db;";
             $options = [
                 PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
