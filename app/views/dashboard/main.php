@@ -70,7 +70,47 @@
         </div>
     </div>
 
-    <div id="tab-clientes" class="hidden-view space-y-4 max-w-4xl mx-auto">
-        <h2 class="text-2xl font-bold">Clientes</h2>
+    <div id="tab-clientes" class="hidden-view space-y-6 max-w-4xl mx-auto pb-20 md:pb-0">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <h2 class="text-2xl font-bold text-charcoal flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary text-3xl">group</span>
+                    Clientes
+                </h2>
+                <p class="text-xs text-gray-500 font-semibold mt-1">Directorio y gestión de clientes registrados</p>
+            </div>
+            <div class="bg-primary/10 border border-primary/30 px-4 py-2 rounded-xl text-charcoal flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">person_search</span>
+                <span class="text-xs font-bold">Total: <span id="total-clientes-badge" class="text-sm font-extrabold text-charcoal">0</span></span>
+            </div>
+        </div>
+
+        <!-- Barra de Búsqueda y Filtros de Clientes -->
+        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm space-y-3">
+            <div class="relative">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
+                <input id="input-buscar-cliente" type="text" oninput="filtrarClientesDebounced()" placeholder="Buscar cliente por nombre o número de WhatsApp..." class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm font-semibold text-charcoal outline-none focus:border-primary focus:bg-white transition">
+            </div>
+
+            <div class="flex flex-col md:flex-row gap-3">
+                <div class="flex-1">
+                    <label class="block text-xs font-bold text-gray-500 mb-1">Sucursal / Zona</label>
+                    <select id="filtro-cliente-sucursal" onchange="cargarClientes()" class="w-full p-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-700 outline-none focus:border-primary focus:bg-white transition">
+                        <option value="todas">Todas las sucursales</option>
+                    </select>
+                </div>
+                <div class="flex-1">
+                    <label class="block text-xs font-bold text-gray-500 mb-1">Estado</label>
+                    <select id="filtro-cliente-estado" onchange="cargarClientes()" class="w-full p-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-700 outline-none focus:border-primary focus:bg-white transition">
+                        <option value="todos">Todos los estados</option>
+                        <option value="agendado">Agendado</option>
+                        <option value="no agendado">No Agendado</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de Clientes -->
+        <div id="lista-clientes" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
     </div>
 </main>

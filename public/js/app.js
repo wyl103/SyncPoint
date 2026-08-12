@@ -16,7 +16,7 @@ function switchTab(tabId) {
     });
     document.getElementById(`tab-${tabId}`).classList.remove('hidden-view');
     
-    const titles = { dashboard: 'Dashboard', clientes: 'Directorio de Clientes', rutas: 'Gestión de Zonas' };
+    const titles = { dashboard: 'Eventos', clientes: 'Directorio de Clientes', rutas: 'Gestión de Zonas' };
     document.getElementById('header-title').innerText = titles[tabId];
 
     document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -31,6 +31,10 @@ function switchTab(tabId) {
         if(activeBtn.classList.contains('w-full')) activeBtn.classList.add('bg-primary/20');
         activeBtn.querySelector('.material-symbols-outlined').classList.add('filled');
     });
+
+    if (tabId === 'clientes') {
+        cargarClientes();
+    }
 }
 
 // --- LÓGICA DEL DASHBOARD Y API ---
@@ -363,29 +367,143 @@ async function cargarFiltrosDinamicos() {
         if (result.success) {
             // Llenar estados
             const selectEstado = document.getElementById('filtro-estado');
-            selectEstado.innerHTML = `<option value="todos">Todos los estados</option>`;
-            result.data.estados.forEach(estado => {
-                // Capitalizar primera letra para que se vea bonito
-                const textoEstado = estado.charAt(0).toUpperCase() + estado.slice(1);
-                selectEstado.innerHTML += `<option value="${estado}">${textoEstado}</option>`;
-            });
+            if (selectEstado) {
+                selectEstado.innerHTML = `<option value="todos">Todos los estados</option>`;
+                result.data.estados.forEach(estado => {
+                    const textoEstado = estado.charAt(0).toUpperCase() + estado.slice(1);
+                    selectEstado.innerHTML += `<option value="${estado}">${textoEstado}</option>`;
+                });
+            }
 
-            // Llenar sucursales
+            // Llenar sucursales (Dashboard)
             const selectSucursal = document.getElementById('filtro-sucursal');
-            selectSucursal.innerHTML = `
-                <option value="todas">Todas las sucursales</option>
-                <option value="otras">Otras sucursales</option>
-            `;
-            
-            // Solo agregamos al filtro principal las que son destacadas (opcional, puedes ponerlas todas)
-            result.data.sucursales.forEach(suc => {
-                if(suc.destacada == 1) {
-                    selectSucursal.innerHTML += `<option value="${suc.id}">${suc.nombre}</option>`;
-                }
-            });
+            if (selectSucursal) {
+                selectSucursal.innerHTML = `
+                    <option value="todas">Todas las sucursales</option>
+                    <option value="otras">Otras sucursales</option>
+                `;
+                result.data.sucursales.forEach(suc => {
+                    if(suc.destacada == 1) {
+                        selectSucursal.innerHTML += `<option value="${suc.id}">${suc.nombre}</option>`;
+                    }
+                });
+            }
+
+            // Llenar sucursales (Clientes)
+            const selectClienteSucursal = document.getElementById('filtro-cliente-sucursal');
+            if (selectClienteSucursal) {
+                selectClienteSucursal.innerHTML = `<option value="todas">Todas las sucursales</option>`;
+                result.data.sucursales.forEach(suc => {
+                    selectClienteSucursal.innerHTML += `<option value="${suc.id}">${suc.nombre}</option>`;
+                });
+            }
         }
     } catch (error) {
         console.error("Error cargando filtros:", error);
+    }
+}
+
+// --- GESTIÓN Y MOSTRADO DE CLIENTES ---
+let timerBusquedaClientes = null;
+
+function filtrarClientesDebounced() {
+    clearTimeout(timerBusquedaClientes);
+    timerBusquedaClientes = setTimeout(() => {
+        cargarClientes();
+    }, 300);
+}
+
+async function cargarClientes() {
+    const container = document.getElementById('lista-clientes');
+    const totalBadge = document.getElementById('total-clientes-badge');
+    if (!container) return;
+
+    const busqueda = document.getElementById('input-buscar-cliente')?.value.trim() || '';
+    const sucursalId = document.getElementById('filtro-cliente-sucursal')?.value || 'todas';
+    const estado = document.getElementById('filtro-cliente-estado')?.value || 'todos';
+
+    container.innerHTML = `<div class="col-span-1 md:col-span-2 text-center py-12"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div><p class="text-xs text-gray-400 mt-2 font-semibold">Cargando clientes...</p></div>`;
+
+    try {
+        let url = `${API_BASE}/clientes/index.php?q=${encodeURIComponent(busqueda)}`;
+        if (sucursalId !== 'todas') url += `&sucursal_id=${encodeURIComponent(sucursalId)}`;
+        if (estado !== 'todos') url += `&estado=${encodeURIComponent(estado)}`;
+
+        const response = await fetch(url);
+        const result = await response.json();
+
+        if (result.success) {
+            const clientes = result.data || [];
+            if (totalBadge) totalBadge.innerText = clientes.length;
+
+            if (clientes.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-1 md:col-span-2 bg-white border border-gray-200 rounded-xl p-8 text-center shadow-sm">
+                        <span class="material-symbols-outlined text-gray-300 text-5xl mb-2">person_off</span>
+                        <p class="text-gray-500 font-bold text-base">No se encontraron clientes</p>
+                        <p class="text-xs text-gray-400 mt-1">Prueba con otros términos de búsqueda o filtros.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+            clientes.forEach(cliente => {
+                let estadoBadgeClass = cliente.estado === 'agendado' 
+                    ? 'bg-green-50 text-green-700 border-green-200' 
+                    : 'bg-yellow-50 text-yellow-700 border-yellow-200';
+
+                let whatsappLimpio = (cliente.telefono_whatsapp || '').replace(/\D/g, '');
+                let whatsappLink = whatsappLimpio ? `https://wa.me/${whatsappLimpio}` : '#';
+
+                container.innerHTML += `
+                    <div class="bg-white border border-gray-200 p-5 rounded-xl shadow-sm hover:border-primary transition flex flex-col justify-between space-y-4">
+                        <div>
+                            <div class="flex justify-between items-start gap-2 mb-2">
+                                <h3 class="font-bold text-charcoal text-lg leading-snug">${cliente.nombre}</h3>
+                                <span class="px-2.5 py-1 border text-[10px] font-bold rounded-md uppercase tracking-wider ${estadoBadgeClass}">
+                                    ${cliente.estado || 'no agendado'}
+                                </span>
+                            </div>
+                            
+                            <div class="space-y-1.5 text-xs text-gray-600 font-medium">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-gray-400 text-[16px]">call</span>
+                                    <a href="${whatsappLink}" target="_blank" class="hover:text-primary hover:underline font-semibold text-gray-700">
+                                        ${cliente.telefono_whatsapp}
+                                    </a>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-primary text-[16px]">route</span>
+                                    <span>Ruta: <strong class="text-gray-800">${cliente.ruta_nombre || 'Sin asignación'}</strong></span>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-gray-400 text-[16px]">store</span>
+                                    <span>Sucursal: <strong class="text-gray-800">${cliente.sucursal_nombre || 'N/A'}</strong></span>
+                                </div>
+                                ${cliente.frecuencia_nombre ? `
+                                <div class="flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-gray-400 text-[16px]">update</span>
+                                    <span>Frecuencia: <strong class="text-gray-800">${cliente.frecuencia_nombre}</strong></span>
+                                </div>` : ''}
+                            </div>
+                        </div>
+
+                        <div class="pt-3 border-t border-gray-100 flex items-center justify-between">
+                            <span class="text-[11px] font-bold text-gray-400">ID: #${cliente.id}</span>
+                            <a href="https://wa.me/${whatsappLimpio}" target="_blank" class="inline-flex items-center gap-1 text-xs font-bold text-green-600 hover:text-green-700 bg-green-50 hover:bg-green-100 px-3 py-1.5 rounded-lg border border-green-200 transition">
+                                <span class="material-symbols-outlined text-[16px]">chat</span> WhatsApp
+                            </a>
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            container.innerHTML = `<p class="text-red-500 col-span-2 text-center text-sm font-bold">Error cargando lista de clientes.</p>`;
+        }
+    } catch (error) {
+        console.error("Error al obtener clientes:", error);
+        container.innerHTML = `<p class="text-red-500 col-span-2 text-center text-sm font-bold">Error de conexión con el servidor.</p>`;
     }
 }
 
@@ -397,6 +515,5 @@ function initApp() {
 
 function toggleFiltros() {
     const panel = document.getElementById('panel-filtros');
-    // Alternamos la clase 'hidden' de Tailwind para mostrar/ocultar el contenedor
     panel.classList.toggle('hidden');
 }

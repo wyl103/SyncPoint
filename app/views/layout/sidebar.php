@@ -5,7 +5,7 @@
     </div>
     <nav class="flex-1 p-4 space-y-2">
         <button onclick="switchTab('dashboard')" class="nav-btn w-full flex items-center gap-3 p-3 rounded-xl text-charcoal bg-primary/20 font-bold transition" data-target="dashboard">
-            <span class="material-symbols-outlined filled">dashboard</span> Dashboard
+            <span class="material-symbols-outlined filled">event</span> Eventos
         </button>
         <button onclick="switchTab('clientes')" class="nav-btn w-full flex items-center gap-3 p-3 rounded-xl text-gray-500 hover:bg-gray-50 font-semibold transition" data-target="clientes">
             <span class="material-symbols-outlined">group</span> Clientes

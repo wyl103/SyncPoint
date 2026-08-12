@@ -14,7 +14,7 @@ require_once __DIR__ . '/../app/views/auth/login.php';
 
     <div class="flex-1 flex flex-col h-full overflow-hidden relative">
         <header class="bg-white border-b border-gray-200 px-4 py-4 md:px-8 flex justify-between items-center z-30 shadow-sm">
-            <h1 id="header-title" class="text-xl font-bold tracking-tight text-charcoal">Dashboard</h1>
+            <h1 id="header-title" class="text-xl font-bold tracking-tight text-charcoal">Eventos</h1>
             <div class="flex gap-3 items-center">
                 <span id="user-name-display" class="text-sm font-semibold hidden md:block text-gray-500"></span>
                 
@@ -29,7 +29,7 @@ require_once __DIR__ . '/../app/views/auth/login.php';
 
         <nav class="md:hidden bg-white border-t border-gray-200 px-6 py-3 flex justify-between items-center z-50 fixed bottom-0 w-full shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
             <button onclick="switchTab('dashboard')" class="nav-btn flex flex-col items-center gap-1 text-charcoal" data-target="dashboard">
-                <span class="material-symbols-outlined filled">dashboard</span><span class="text-[10px] font-bold">Dash</span>
+                <span class="material-symbols-outlined filled">event</span><span class="text-[10px] font-bold">Eventos</span>
             </button>
             <button onclick="switchTab('clientes')" class="nav-btn flex flex-col items-center gap-1 text-gray-400" data-target="clientes">
                 <span class="material-symbols-outlined">group</span><span class="text-[10px] font-bold">Clientes</span>
