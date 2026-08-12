@@ -1,7 +1,7 @@
 <?php
 // app/integrations/chatwoot/ChatwootService.php
 require_once __DIR__ . '/../../services/Database.php';
-require_once __DIR__ . '/../../models/Cliente.php';
+require_once __DIR__ . '/../../models/core/clientes.php';
 
 class ChatwootService {
     private $baseUrl;
