@@ -7,26 +7,20 @@ let clienteTotalPaginas = 1;
 
 async function cargarFiltrosDinamicos() {
     try {
-        const response = await fetch(`${API_BASE}/sistema/filtros.php`);
-        const result = await response.json();
+        // Cargar sucursales desde la nueva API core (/core/sucursales.php)
+        const resSuc = await fetch(`${API_BASE}/core/sucursales.php?limit=100`);
+        const resultSuc = await resSuc.json();
 
-        if (result.success) {
-            const selectEstado = document.getElementById('filtro-estado');
-            if (selectEstado) {
-                selectEstado.innerHTML = `<option value="todos">Todos los estados</option>`;
-                result.data.estados.forEach(estado => {
-                    const textoEstado = estado.charAt(0).toUpperCase() + estado.slice(1);
-                    selectEstado.innerHTML += `<option value="${estado}">${textoEstado}</option>`;
-                });
-            }
-
+        if (resultSuc.success) {
+            const sucursales = resultSuc.data || [];
+            
             const selectSucursal = document.getElementById('filtro-sucursal');
             if (selectSucursal) {
                 selectSucursal.innerHTML = `
                     <option value="todas">Todas las sucursales</option>
                     <option value="otras">Otras sucursales</option>
                 `;
-                result.data.sucursales.forEach(suc => {
+                sucursales.forEach(suc => {
                     if (suc.destacada == 1) {
                         selectSucursal.innerHTML += `<option value="${suc.id}">${suc.nombre}</option>`;
                     }
@@ -36,13 +30,23 @@ async function cargarFiltrosDinamicos() {
             const selectClienteSucursal = document.getElementById('filtro-cliente-sucursal');
             if (selectClienteSucursal) {
                 selectClienteSucursal.innerHTML = `<option value="todas">Todas las sucursales</option>`;
-                result.data.sucursales.forEach(suc => {
+                sucursales.forEach(suc => {
                     selectClienteSucursal.innerHTML += `<option value="${suc.id}">${suc.nombre}</option>`;
                 });
             }
-
-            cargarRutasPorSucursal('todas');
         }
+
+        // Cargar estados desde el endpoint de sistema o estáticos
+        const selectEstado = document.getElementById('filtro-estado');
+        if (selectEstado && selectEstado.options.length <= 1) {
+            selectEstado.innerHTML = `
+                <option value="todos">Todos los estados</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="completada">Completada</option>
+            `;
+        }
+
+        cargarRutasPorSucursal('todas');
     } catch (error) {
         console.error("Error cargando filtros:", error);
     }
@@ -60,9 +64,9 @@ async function cargarRutasPorSucursal(sucursalId = 'todas') {
     if (!selectRuta) return;
 
     try {
-        let url = `${API_BASE}/rutas/index.php`;
+        let url = `${API_BASE}/core/rutas.php?limit=100`;
         if (sucursalId !== 'todas') {
-            url += `?sucursal_id=${encodeURIComponent(sucursalId)}`;
+            url += `&sucursal_id=${encodeURIComponent(sucursalId)}`;
         }
 
         const response = await fetch(url);
@@ -103,7 +107,7 @@ async function cargarClientes(page = 1) {
     container.innerHTML = `<div class="col-span-1 md:col-span-2 text-center py-12"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div><p class="text-xs text-gray-400 mt-2 font-semibold">Cargando clientes...</p></div>`;
 
     try {
-        let url = `${API_BASE}/clientes/index.php?page=${clientePaginaActual}&limit=${limit}&q=${encodeURIComponent(busqueda)}`;
+        let url = `${API_BASE}/core/clientes.php?page=${clientePaginaActual}&limit=${limit}&q=${encodeURIComponent(busqueda)}`;
         if (sucursalId !== 'todas') url += `&sucursal_id=${encodeURIComponent(sucursalId)}`;
         if (rutaId !== 'todas') url += `&ruta_id=${encodeURIComponent(rutaId)}`;
         if (estado !== 'todos') url += `&estado=${encodeURIComponent(estado)}`;
