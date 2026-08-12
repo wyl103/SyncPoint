@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
     
-    // Elementos del DOM... (igual que antes)
     const viewLogin = document.getElementById('view-login');
     const viewApp = document.getElementById('view-app');
     const loadingScreen = document.getElementById('loading-screen');
@@ -9,17 +8,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnLogout = document.getElementById('btn-logout');
     const btnLogoutMobile = document.getElementById('btn-logout-mobile');
     
-    // --- NUEVO: Definir la URL Base ---
-    // Esto debe coincidir con lo que pusiste en la etiqueta <base> del HTML
-    const BASE_PATH = '/app_bless/public'; 
+    // Detección dinámica de la ruta base según el servidor (Apache vs PHP Built-in Server)
+    const currentPath = window.location.pathname;
+    const APP_ROOT = currentPath.includes('/app_bless') ? '/app_bless' : '';
+    const BASE_PATH = APP_ROOT ? `${APP_ROOT}/public` : '';
+    const API_BASE = `${APP_ROOT}/app/api`;
+
+    function mostrarError(mensaje) {
+        if (!loginError) return;
+        loginError.innerText = mensaje || "Ocurrió un problema al iniciar sesión. Inténtelo más tarde.";
+        loginError.classList.remove('hidden-view');
+        showLogin();
+    }
 
     async function checkAuthStatus() {
         try {
-            // Nota el cambio: Ahora bajamos un nivel desde public/ para llegar a app/api/
-            const response = await fetch('../app/api/auth/check_session.php');
+            const response = await fetch(`${API_BASE}/auth/check_session.php`);
+            
+            if (!response.ok) {
+                showLogin();
+                return;
+            }
+
             const data = await response.json();
 
-            if (data.authenticated) {
+            if (data && data.authenticated) {
                 showApp(data.user);
             } else {
                 showLogin();
@@ -28,50 +41,60 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Error validando sesión:", error);
             showLogin();
         } finally {
-            loadingScreen.classList.add('hidden-view');
+            if (loadingScreen) {
+                loadingScreen.classList.add('hidden-view');
+            }
         }
     }
 
-    loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        loginError.classList.add('hidden-view');
-        
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-
-        try {
-            // Nota el cambio en la ruta del fetch
-            const response = await fetch('../app/api/auth/login.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (loginError) loginError.classList.add('hidden-view');
             
-            const data = await response.json();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
 
-            if (data.success) {
-                checkAuthStatus(); 
-            } else {
-                loginError.innerText = data.message;
-                loginError.classList.remove('hidden-view');
+            try {
+                const response = await fetch(`${API_BASE}/auth/login.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const rawText = await response.text();
+                let data;
+                
+                try {
+                    data = JSON.parse(rawText);
+                } catch (jsonErr) {
+                    console.error("Respuesta no-JSON del servidor:", rawText);
+                    mostrarError("Ocurrió un problema en el servidor. Inténtelo más tarde.");
+                    return;
+                }
+
+                if (response.ok && data.success) {
+                    checkAuthStatus(); 
+                } else {
+                    mostrarError(data.message || "Credenciales incorrectas");
+                }
+            } catch (error) {
+                console.error("Error de conexión:", error);
+                mostrarError("No se pudo conectar con el servidor. Inténtelo más tarde.");
             }
-        } catch (error) {
-            loginError.innerText = "Error de conexión con el servidor.";
-            loginError.classList.remove('hidden-view');
-        }
-    });
+        });
+    }
 
-    if(btnLogout) {
+    if (btnLogout) {
         btnLogout.addEventListener('click', realizarLogout);
     }
-    if(btnLogoutMobile) {
+    if (btnLogoutMobile) {
         btnLogoutMobile.addEventListener('click', realizarLogout);
     }
 
-    // Y metes la lógica que ya tenías dentro de una funcioncita para no repetirla:
     async function realizarLogout() {
         try {
-            const response = await fetch('../app/api/auth/logout.php', { method: 'POST' });
+            const response = await fetch(`${API_BASE}/auth/logout.php`, { method: 'POST' });
             const result = await response.json();
             if (result.success) {
                 document.getElementById('email').value = '';
@@ -84,39 +107,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showApp(user) {
-        viewLogin.classList.add('hidden-view');
-        viewApp.classList.remove('hidden-view');
+        if (viewLogin) viewLogin.classList.add('hidden-view');
+        if (viewApp) viewApp.classList.remove('hidden-view');
 
         const userDisplay = document.getElementById('user-name-display');
-        if (userDisplay) userDisplay.innerText = user.nombre;
+        if (userDisplay && user) userDisplay.innerText = user.nombre || 'Usuario';
         
-        // --- NUEVO: Incluir BASE_PATH en la URL visible ---
-        const targetUrl = BASE_PATH + '/dash';
-        if(window.location.pathname !== targetUrl) {
+        const targetUrl = (BASE_PATH || '') + '/dash';
+        if (window.location.pathname !== targetUrl && targetUrl !== '/dash') {
             window.history.pushState({}, '', targetUrl);
         }
 
-        // Si la función existe (porque app.js cargó bien), arranca el dashboard
         if (typeof initApp === 'function') {
             initApp();
         }
     }
 
     function showLogin() {
-        viewApp.classList.add('hidden-view');
-        viewLogin.classList.remove('hidden-view');
+        if (viewApp) viewApp.classList.add('hidden-view');
+        if (viewLogin) viewLogin.classList.remove('hidden-view');
         
-        // --- NUEVO: Incluir BASE_PATH en la URL visible ---
-        const targetUrl = BASE_PATH + '/login';
-        if(window.location.pathname !== targetUrl) {
+        const targetUrl = (BASE_PATH || '') + '/login';
+        if (window.location.pathname !== targetUrl && targetUrl !== '/login') {
             window.history.pushState({}, '', targetUrl);
         }
-
-        if (typeof initApp === 'function') {
-            initApp();
-        }
     }
-    
 
     checkAuthStatus();
 });

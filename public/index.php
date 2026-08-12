@@ -27,15 +27,12 @@ require_once __DIR__ . '/../app/views/auth/login.php';
 
         <?php require_once __DIR__ . '/../app/views/dashboard/main.php'; ?>
 
-        <nav class="md:hidden bg-white border-t border-gray-200 px-6 py-3 flex justify-between items-center z-50 fixed bottom-0 w-full shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <nav class="md:hidden bg-white border-t border-gray-200 px-6 py-3 flex justify-around items-center z-50 fixed bottom-0 w-full shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
             <button onclick="switchTab('dashboard')" class="nav-btn flex flex-col items-center gap-1 text-charcoal" data-target="dashboard">
                 <span class="material-symbols-outlined filled">event</span><span class="text-[10px] font-bold">Eventos</span>
             </button>
             <button onclick="switchTab('clientes')" class="nav-btn flex flex-col items-center gap-1 text-gray-400" data-target="clientes">
                 <span class="material-symbols-outlined">group</span><span class="text-[10px] font-bold">Clientes</span>
-            </button>
-            <button onclick="switchTab('rutas')" class="nav-btn flex flex-col items-center gap-1 text-gray-400" data-target="rutas">
-                <span class="material-symbols-outlined">map</span><span class="text-[10px] font-bold">Zonas</span>
             </button>
             <button id="btn-logout-mobile" class="nav-btn flex flex-col items-center gap-1 text-red-500">
                 <span class="material-symbols-outlined">menu</span><span class="text-[10px] font-bold">Salir</span>
@@ -45,11 +42,15 @@ require_once __DIR__ . '/../app/views/auth/login.php';
 </div>
 
 <?php 
-// 4. Incluimos las modales (Si creas un archivo modals.php en layout)
-// require_once __DIR__ . '/../app/views/layout/modals.php'; 
+// 4. Incluimos las modales globales de la aplicación
+require_once __DIR__ . '/../app/views/layout/modals.php'; 
 ?>
 
 <script src="js/auth.js"></script>
+<script src="js/modules/utils.js"></script>
+<script src="js/modules/dashboard.js"></script>
+<script src="js/modules/clientes.js"></script>
+<script src="js/modules/chatwoot.js"></script>
 <script src="js/app.js"></script>
 
 </body>
