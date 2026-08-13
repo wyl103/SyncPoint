@@ -1,6 +1,6 @@
 # 👥 Documentación API - Clientes (`core/clientes.php`)
 
-Esta API permite realizar la gestión completa (CRUD) de los **Clientes**, incluyendo filtrado por nombre, teléfono de WhatsApp, ruta, sucursal y estado (`agendado` o `no agendado`), además de paginación server-side.
+Esta API permite realizar la gestión completa (CRUD) de los **Clientes**, incluyendo filtrado por nombre, teléfono de WhatsApp, ruta, sucursal y estado (`agendado` o `no agendado`), además de manejar la `fecha_base` de ciclo de recolección y paginación server-side.
 
 ---
 
@@ -59,6 +59,7 @@ curl -X GET "http://localhost:1019/app/api/core/clientes.php?q=Samys&estado=no%2
       "frecuencia_id": 1,
       "ruta_id": 2,
       "estado": "no agendado",
+      "fecha_base": "2026-08-01",
       "ruta_nombre": "Jueves",
       "ruta_ciudad": "Ibagué",
       "sucursal_id": 1,
@@ -102,6 +103,7 @@ curl -X GET "http://localhost:1019/app/api/core/clientes.php?id=539" \
     "frecuencia_id": 1,
     "ruta_id": 2,
     "estado": "no agendado",
+    "fecha_base": "2026-08-01",
     "ruta_nombre": "Jueves",
     "ruta_ciudad": "Ibagué",
     "sucursal_id": 1,
@@ -124,10 +126,11 @@ curl -X GET "http://localhost:1019/app/api/core/clientes.php?id=539" \
 | Campo | Tipo | Requerido | Descripción |
 | :--- | :--- | :--- | :--- |
 | `nombre` | `string` | **Sí** | Nombre completo o razón social del cliente. |
-| `telefono_whatsapp` | `string` | **Sí** | Número de teléfono / WhatsApp del cliente (formato recomendado con código de país, ej: `573001234567`). |
+| `telefono_whatsapp` | `string` | **Sí** | Número de teléfono / WhatsApp del cliente. |
 | `frecuencia_id` | `int` | No | ID de la frecuencia de recolección (`null` si no aplica). |
 | `ruta_id` | `int` | No | ID de la ruta asignada (`null` si no aplica). |
 | `estado` | `string` | No | Estado del cliente: `'agendado'` o `'no agendado'`. Por defecto `'no agendado'`. |
+| `fecha_base` | `string` (date) | No | Fecha base para cálculo de frecuencia (`YYYY-MM-DD`). |
 
 #### Ejemplo JSON Body
 ```json
@@ -136,7 +139,8 @@ curl -X GET "http://localhost:1019/app/api/core/clientes.php?id=539" \
   "telefono_whatsapp": "573119876543",
   "frecuencia_id": 1,
   "ruta_id": 2,
-  "estado": "no agendado"
+  "estado": "no agendado",
+  "fecha_base": "2026-08-15"
 }
 ```
 
@@ -150,7 +154,8 @@ curl -X POST "http://localhost:1019/app/api/core/clientes.php" \
     "telefono_whatsapp": "573119876543",
     "frecuencia_id": 1,
     "ruta_id": 2,
-    "estado": "no agendado"
+    "estado": "no agendado",
+    "fecha_base": "2026-08-15"
   }'
 ```
 
@@ -181,6 +186,7 @@ curl -X POST "http://localhost:1019/app/api/core/clientes.php" \
 | `frecuencia_id` | `int` | No | ID de la frecuencia de recolección. |
 | `ruta_id` | `int` | No | ID de la ruta asignada. |
 | `estado` | `string` | No | Estado: `'agendado'` o `'no agendado'`. |
+| `fecha_base` | `string` (date) | No | Fecha base en formato `YYYY-MM-DD`. |
 
 #### Ejemplo JSON Body
 ```json
@@ -189,7 +195,8 @@ curl -X POST "http://localhost:1019/app/api/core/clientes.php" \
   "telefono_whatsapp": "573119876543",
   "frecuencia_id": 2,
   "ruta_id": 2,
-  "estado": "agendado"
+  "estado": "agendado",
+  "fecha_base": "2026-08-20"
 }
 ```
 
@@ -203,7 +210,8 @@ curl -X PUT "http://localhost:1019/app/api/core/clientes.php?id=625" \
     "telefono_whatsapp": "573119876543",
     "frecuencia_id": 2,
     "ruta_id": 2,
-    "estado": "agendado"
+    "estado": "agendado",
+    "fecha_base": "2026-08-20"
   }'
 ```
 

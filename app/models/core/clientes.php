@@ -55,6 +55,7 @@ class Cliente {
                         c.frecuencia_id, 
                         c.ruta_id, 
                         c.estado,
+                        c.fecha_base,
                         r.nombre AS ruta_nombre,
                         r.ciudad AS ruta_ciudad,
                         s.id AS sucursal_id,
@@ -89,6 +90,7 @@ class Cliente {
                     c.frecuencia_id, 
                     c.ruta_id, 
                     c.estado,
+                    c.fecha_base,
                     r.nombre AS ruta_nombre,
                     r.ciudad AS ruta_ciudad,
                     s.id AS sucursal_id,
@@ -104,9 +106,9 @@ class Cliente {
         return $stmt->fetch();
     }
 
-    public function create($nombre, $telefonoWhatsapp, $frecuenciaId = null, $rutaId = null, $estado = 'no agendado') {
-        $sql = "INSERT INTO clientes (nombre, telefono_whatsapp, frecuencia_id, ruta_id, estado) 
-                VALUES (:nombre, :telefono_whatsapp, :frecuencia_id, :ruta_id, :estado::clientes_estado) 
+    public function create($nombre, $telefonoWhatsapp, $frecuenciaId = null, $rutaId = null, $estado = 'no agendado', $fechaBase = null) {
+        $sql = "INSERT INTO clientes (nombre, telefono_whatsapp, frecuencia_id, ruta_id, estado, fecha_base) 
+                VALUES (:nombre, :telefono_whatsapp, :frecuencia_id, :ruta_id, :estado::clientes_estado, :fecha_base) 
                 RETURNING id";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
@@ -114,19 +116,21 @@ class Cliente {
             'telefono_whatsapp' => $telefonoWhatsapp,
             'frecuencia_id' => $frecuenciaId ?: null,
             'ruta_id' => $rutaId ?: null,
-            'estado' => $estado ?: 'no agendado'
+            'estado' => $estado ?: 'no agendado',
+            'fecha_base' => $fechaBase ?: null
         ]);
         $result = $stmt->fetch();
         return $result ? $result['id'] : true;
     }
 
-    public function update($id, $nombre, $telefonoWhatsapp, $frecuenciaId = null, $rutaId = null, $estado = 'no agendado') {
+    public function update($id, $nombre, $telefonoWhatsapp, $frecuenciaId = null, $rutaId = null, $estado = 'no agendado', $fechaBase = null) {
         $sql = "UPDATE clientes 
                 SET nombre = :nombre, 
                     telefono_whatsapp = :telefono_whatsapp, 
                     frecuencia_id = :frecuencia_id, 
                     ruta_id = :ruta_id, 
-                    estado = :estado::clientes_estado 
+                    estado = :estado::clientes_estado,
+                    fecha_base = :fecha_base
                 WHERE id = :id";
         $stmt = $this->pdo->prepare($sql);
         return $stmt->execute([
@@ -135,7 +139,8 @@ class Cliente {
             'telefono_whatsapp' => $telefonoWhatsapp,
             'frecuencia_id' => $frecuenciaId ?: null,
             'ruta_id' => $rutaId ?: null,
-            'estado' => $estado ?: 'no agendado'
+            'estado' => $estado ?: 'no agendado',
+            'fecha_base' => $fechaBase ?: null
         ]);
     }
 

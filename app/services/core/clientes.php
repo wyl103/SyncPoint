@@ -35,13 +35,15 @@ class ClienteService {
         $frecuenciaId = !empty($datos['frecuencia_id']) ? $datos['frecuencia_id'] : null;
         $rutaId = !empty($datos['ruta_id']) ? $datos['ruta_id'] : null;
         $estado = !empty($datos['estado']) ? $datos['estado'] : 'no agendado';
+        $fechaBase = !empty($datos['fecha_base']) ? $datos['fecha_base'] : null;
 
         return $this->clienteModel->create(
             trim($datos['nombre']),
             trim($datos['telefono_whatsapp']),
             $frecuenciaId,
             $rutaId,
-            $estado
+            $estado,
+            $fechaBase
         );
     }
 
@@ -59,6 +61,7 @@ class ClienteService {
         $frecuenciaId = !empty($datos['frecuencia_id']) ? $datos['frecuencia_id'] : null;
         $rutaId = !empty($datos['ruta_id']) ? $datos['ruta_id'] : null;
         $estado = !empty($datos['estado']) ? $datos['estado'] : 'no agendado';
+        $fechaBase = !empty($datos['fecha_base']) ? $datos['fecha_base'] : null;
 
         $actualizado = $this->clienteModel->update(
             $id,
@@ -66,7 +69,8 @@ class ClienteService {
             trim($datos['telefono_whatsapp']),
             $frecuenciaId,
             $rutaId,
-            $estado
+            $estado,
+            $fechaBase
         );
 
         if (!$actualizado) {
