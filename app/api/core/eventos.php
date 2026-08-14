@@ -1,5 +1,5 @@
 <?php
-// app/api/clientes/index.php
+// app/api/core/eventos.php
 header('Content-Type: application/json');
 
 ini_set('session.cookie_httponly', 1);
@@ -13,12 +13,12 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-require_once __DIR__ . '/../../controllers/ClienteController.php';
+require_once __DIR__ . '/../../controllers/core/eventos.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 
 try {
-    $controller = new ClienteController();
+    $controller = new EventoController();
 
     if ($method === 'GET') {
         $id = $_GET['id'] ?? null;
@@ -27,15 +27,17 @@ try {
             echo json_encode(['success' => true, 'data' => $data]);
         } else {
             $busqueda = $_GET['q'] ?? $_GET['busqueda'] ?? null;
+            $clienteId = $_GET['cliente_id'] ?? null;
             $rutaId = $_GET['ruta_id'] ?? null;
-            $sucursalId = $_GET['sucursal_id'] ?? null;
+            $fecha = $_GET['fecha'] ?? $_GET['fecha_programada'] ?? null;
             $estado = $_GET['estado'] ?? null;
+            $tipo = $_GET['tipo'] ?? null;
             $page = $_GET['page'] ?? 1;
             $limit = $_GET['limit'] ?? 10;
 
-            $result = $controller->index($busqueda, $rutaId, $sucursalId, $estado, $page, $limit);
+            $result = $controller->index($busqueda, $clienteId, $rutaId, $fecha, $estado, $tipo, $page, $limit);
             echo json_encode([
-                'success' => true, 
+                'success' => true,
                 'data' => $result['data'],
                 'pagination' => [
                     'page' => $result['page'],
@@ -48,22 +50,23 @@ try {
     } elseif ($method === 'POST') {
         $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
         $id = $controller->store($input);
-        echo json_encode(['success' => true, 'message' => 'Cliente creado exitosamente', 'id' => $id]);
+        http_response_code(201);
+        echo json_encode(['success' => true, 'message' => 'Evento creado exitosamente', 'id' => $id]);
     } elseif ($method === 'PUT') {
-        $input = json_decode(file_get_contents('php://input'), true);
+        $input = json_decode(file_get_contents('php://input'), true) ?? [];
         $id = $_GET['id'] ?? $input['id'] ?? null;
         $controller->update($id, $input);
-        echo json_encode(['success' => true, 'message' => 'Cliente actualizado exitosamente']);
+        echo json_encode(['success' => true, 'message' => 'Evento actualizado exitosamente']);
     } elseif ($method === 'DELETE') {
-        $id = $_GET['id'] ?? null;
+        $input = json_decode(file_get_contents('php://input'), true) ?? [];
+        $id = $_GET['id'] ?? $input['id'] ?? null;
         $controller->destroy($id);
-        echo json_encode(['success' => true, 'message' => 'Cliente eliminado exitosamente']);
+        echo json_encode(['success' => true, 'message' => 'Evento eliminado exitosamente']);
     } else {
         http_response_code(405);
         echo json_encode(['success' => false, 'message' => 'Método no permitido']);
     }
 } catch (Exception $e) {
-    error_log("Error en clientes API: " . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Error en el servidor: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
 }

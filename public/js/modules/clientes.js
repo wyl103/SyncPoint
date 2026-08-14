@@ -11,6 +11,40 @@ let listaFrecuenciasForm = [];
 let sucursalSeleccionadaModal = null;
 let rutaSeleccionadaModal = null;
 
+// --- Sub-Navegación de Clientes ---
+function cambiarSubTabCliente(subTab) {
+    const btnDirectorio = document.getElementById('header-subtab-directorio') || document.getElementById('subtab-btn-directorio');
+    const btnSucRutas = document.getElementById('header-subtab-sucursales-rutas') || document.getElementById('subtab-btn-sucursales-rutas');
+    const viewDirectorio = document.getElementById('subtab-directorio-clientes');
+    const viewSucRutas = document.getElementById('subtab-sucursales-rutas');
+
+    if (!viewDirectorio || !viewSucRutas) return;
+
+    const activeTextClass = 'text-charcoal font-extrabold cursor-pointer hover:text-black transition border-b-2 border-primary pb-0.5';
+    const inactiveTextClass = 'text-gray-400 font-semibold cursor-pointer hover:text-charcoal transition border-b-2 border-transparent pb-0.5';
+
+    if (subTab === 'directorio') {
+        viewDirectorio.classList.remove('hidden-view');
+        viewSucRutas.classList.add('hidden-view');
+
+        if (btnDirectorio) btnDirectorio.className = activeTextClass;
+        if (btnSucRutas) btnSucRutas.className = inactiveTextClass;
+        if (typeof cargarClientes === 'function') cargarClientes();
+    } else if (subTab === 'sucursales-rutas') {
+        viewDirectorio.classList.add('hidden-view');
+        viewSucRutas.classList.remove('hidden-view');
+
+        if (btnSucRutas) btnSucRutas.className = activeTextClass;
+        if (btnDirectorio) btnDirectorio.className = inactiveTextClass;
+        if (typeof window.cargarSucursalesYRutas === 'function') {
+            window.cargarSucursalesYRutas();
+        } else if (typeof cargarSucursalesYRutas === 'function') {
+            cargarSucursalesYRutas();
+        }
+    }
+}
+window.cambiarSubTabCliente = cambiarSubTabCliente;
+
 async function cargarFiltrosDinamicos() {
     try {
         // Cargar sucursales desde la nueva API core (/core/sucursales.php)
@@ -144,8 +178,8 @@ async function cargarClientes(page = 1) {
             container.innerHTML = '';
             clientes.forEach(cliente => {
                 let estadoBadgeClass = cliente.estado === 'agendado' 
-                    ? 'bg-green-50 text-green-700 border-green-200' 
-                    : 'bg-yellow-50 text-yellow-700 border-yellow-200';
+                    ? 'badge-agendado' 
+                    : 'badge-no-agendado';
 
                 let whatsappLimpio = (cliente.telefono_whatsapp || '').replace(/\D/g, '');
                 let whatsappLink = whatsappLimpio ? `https://wa.me/${whatsappLimpio}` : '#';
@@ -155,7 +189,7 @@ async function cargarClientes(page = 1) {
                         <div>
                             <div class="flex justify-between items-start gap-2 mb-3">
                                 <h3 class="font-bold text-charcoal text-base leading-snug">${cliente.nombre}</h3>
-                                <span class="px-2.5 py-0.5 border text-[10px] font-extrabold rounded-md uppercase tracking-wider shrink-0 ${estadoBadgeClass}">
+                                <span class="${estadoBadgeClass} shrink-0">
                                     ${cliente.estado || 'no agendado'}
                                 </span>
                             </div>

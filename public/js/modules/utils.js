@@ -1,6 +1,14 @@
 // public/js/modules/utils.js
 // Funciones auxiliares y utilidades generales de fecha, hora y formato.
 
+const currentAppPath = window.location.pathname;
+const APP_ROOT_PATH = currentAppPath.includes('/app_bless') ? '/app_bless' : '';
+const GLOBAL_API_BASE = `${APP_ROOT_PATH}/app/api`;
+
+if (typeof window.API_BASE === 'undefined') {
+    window.API_BASE = GLOBAL_API_BASE;
+}
+
 const formatLocalIso = (d) => {
     if (!(d instanceof Date) || isNaN(d)) d = new Date();
     const year = d.getFullYear();

@@ -1496,6 +1496,93 @@
   opacity: 0.65 !important;
 }
 
+/* Global Button Reset */
+button {
+  border: none;
+  outline: none;
+  background: none;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+/* --- NAVEGACIÓN ESTILO PILL FLOTANTE MODERNO --- */
+.pill-nav-wrapper {
+  display: flex !important;
+  justify-content: flex-start !important;
+  margin-bottom: 1.5rem !important;
+  margin-top: 0.5rem !important;
+}
+
+.pill-nav-container {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.375rem !important;
+  background-color: #0f172a !important; /* Dark Slate background */
+  padding: 0.375rem !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.25), 0 8px 10px -6px rgba(15, 23, 42, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.pill-nav-tab {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0.625rem 1.5rem !important;
+  border-radius: 9999px !important;
+  font-size: 0.8125rem !important;
+  font-weight: 600 !important;
+  color: #94a3b8 !important;
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  white-space: nowrap !important;
+  outline: none !important;
+  text-decoration: none !important;
+}
+
+.pill-nav-tab:hover:not(.active) {
+  color: #ffffff !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.pill-nav-tab.active {
+  background-color: #facc14 !important; /* Brand Primary Yellow */
+  color: #0f172a !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 12px rgba(250, 204, 20, 0.35) !important;
+}
+
+/* --- BADGES DE ESTADO ESTILIZADOS --- */
+.badge-no-agendado {
+  display: inline-flex !important;
+  align-items: center !important;
+  background-color: #fefce8 !important;
+  color: #a16207 !important;
+  border: 1px solid #fef08a !important;
+  font-size: 0.65rem !important;
+  font-weight: 800 !important;
+  padding: 0.25rem 0.625rem !important;
+  border-radius: 9999px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+.badge-agendado {
+  display: inline-flex !important;
+  align-items: center !important;
+  background-color: #f0fdf4 !important;
+  color: #15803d !important;
+  border: 1px solid #bbf7d0 !important;
+  font-size: 0.65rem !important;
+  font-weight: 800 !important;
+  padding: 0.25rem 0.625rem !important;
+  border-radius: 9999px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
 /* 4. Botón Editar en Tarjeta */
 .btn-card-edit {
   display: inline-flex !important;
@@ -1516,7 +1603,7 @@
   appearance: none !important;
 }
 .btn-card-edit:hover {
-  background-color: #e5e7eb !important;
+  background-color: #e5e5e5 !important;
   color: #111827 !important;
   border-color: #d1d5db !important;
 }

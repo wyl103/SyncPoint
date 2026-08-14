@@ -13,15 +13,27 @@ require_once __DIR__ . '/../app/views/auth/login.php';
     <?php require_once __DIR__ . '/../app/views/layout/sidebar.php'; ?>
 
     <div class="flex-1 flex flex-col h-full overflow-hidden relative">
-        <header class="bg-white border-b border-gray-200 px-4 py-4 md:px-8 flex justify-between items-center z-30 shadow-sm">
-            <h1 id="header-title" class="text-xl font-bold tracking-tight text-charcoal">Eventos</h1>
-            <div class="flex gap-3 items-center">
-                <span id="user-name-display" class="text-sm font-semibold hidden md:block text-gray-500"></span>
-                
-                <div class="bg-primary/20 w-10 h-10 flex items-center justify-center rounded-full text-charcoal">
-                    <span class="material-symbols-outlined">account_circle</span>
+        <header class="bg-white border-b border-gray-200 px-4 py-4 md:px-8 z-30 shadow-sm">
+            <div class="w-full max-w-[1920px] mx-auto flex justify-between items-center">
+                <div id="header-title-wrapper" class="flex items-center">
+                    <h1 id="header-title" class="text-xl font-bold tracking-tight text-charcoal">Eventos</h1>
+                    <div id="header-subtab-nav" class="hidden flex items-center gap-3 text-lg sm:text-xl tracking-tight">
+                        <button onclick="cambiarSubTabCliente('directorio')" id="header-subtab-directorio" class="text-charcoal font-extrabold cursor-pointer hover:text-black transition">
+                            Clientes
+                        </button>
+                        <span class="text-gray-300 font-light text-base sm:text-lg">|</span>
+                        <button onclick="cambiarSubTabCliente('sucursales-rutas')" id="header-subtab-sucursales-rutas" class="text-gray-400 font-semibold cursor-pointer hover:text-charcoal transition">
+                            Sucursales y Rutas
+                        </button>
+                    </div>
                 </div>
-                
+                <div class="flex gap-3 items-center">
+                    <span id="user-name-display" class="text-sm font-semibold hidden md:block text-gray-500"></span>
+                    
+                    <div class="bg-primary/20 w-10 h-10 flex items-center justify-center rounded-full text-charcoal">
+                        <span class="material-symbols-outlined">account_circle</span>
+                    </div>
+                </div>
             </div>
         </header>
 

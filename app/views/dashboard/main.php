@@ -1,4 +1,4 @@
-<main id="main-content" class="flex-1 overflow-y-auto p-4 md:p-8 relative">
+<main id="main-content" class="flex-1 overflow-y-auto p-4 md:p-8 relative w-full max-w-[1920px] mx-auto">
     <div id="tab-dashboard" class="space-y-6 max-w-4xl mx-auto pb-20 md:pb-0">
         <div class="flex h-12 items-center rounded-xl bg-gray-200 p-1 mb-4">
             <label id="lbl-dia" onclick="changeDashView('dia')" class="flex h-full flex-1 cursor-pointer items-center justify-center rounded-lg text-sm font-bold bg-white shadow-sm text-charcoal transition-all">Día</label>
@@ -70,17 +70,7 @@
         </div>
     </div>
 
-    <div id="tab-clientes" class="hidden-view space-y-6 max-w-5xl mx-auto pb-20 md:pb-0">
-        <!-- Sub-Navegación Superior del Módulo Clientes -->
-        <div class="flex items-center gap-2 border-b border-gray-200/80 pb-3">
-            <button onclick="cambiarSubTabCliente('directorio')" id="subtab-btn-directorio" class="px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition cursor-pointer bg-primary/20 text-charcoal border border-primary/30 shadow-2xs">
-                <span class="material-symbols-outlined text-[18px]">group</span> Clientes
-            </button>
-            <button onclick="cambiarSubTabCliente('sucursales-rutas')" id="subtab-btn-sucursales-rutas" class="px-4 py-2 rounded-xl font-semibold text-xs text-gray-500 hover:text-charcoal hover:bg-gray-100 flex items-center gap-2 transition cursor-pointer border border-transparent">
-                <span class="material-symbols-outlined text-[18px]">alt_route</span> Sucursales y Rutas
-            </button>
-        </div>
-
+    <div id="tab-clientes" class="hidden-view space-y-6 max-w-4xl mx-auto pb-20 md:pb-0">
         <!-- SUB-PESTAÑA 1: DIRECTORIO DE CLIENTES -->
         <div id="subtab-directorio-clientes" class="space-y-6">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -92,14 +82,10 @@
                     <p class="text-xs text-gray-500 font-semibold mt-1">Gestión de clientes registrados</p>
                 </div>
                 <div class="flex items-center gap-3">
-                    <div class="bg-primary/10 border border-primary/30 px-3.5 py-2 rounded-xl text-charcoal flex items-center gap-2">
+                    <div class="bg-white border-0 px-4 py-2.5 rounded-xl text-charcoal flex items-center gap-2 shadow-2xs">
                         <span class="material-symbols-outlined text-primary">person_search</span>
                         <span class="text-xs font-bold">Total: <span id="total-clientes-badge" class="text-sm font-extrabold text-charcoal">0</span></span>
                     </div>
-                    <button onclick="abrirModalCrearCliente()" class="btn-primary-main">
-                        <span class="material-symbols-outlined text-[18px]">person_add</span>
-                        <span>Nuevo Cliente</span>
-                    </button>
                 </div>
             </div>
 
@@ -153,6 +139,14 @@
                 </div>
             </div>
 
+            <!-- Botón Crear Nuevo Cliente (Ubicado Debajo del Cuadro de Filtros) -->
+            <div class="flex justify-end pt-1">
+                <button onclick="abrirModalCrearCliente()" class="btn-primary-main">
+                    <span class="material-symbols-outlined text-[18px]">person_add</span>
+                    <span>Nuevo Cliente</span>
+                </button>
+            </div>
+
             <!-- Lista de Clientes -->
             <div id="lista-clientes" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
 
@@ -193,6 +187,36 @@
                         <span class="material-symbols-outlined text-[18px]">add</span>
                         <span>Nueva Sucursal</span>
                     </button>
+                </div>
+            </div>
+
+            <!-- Barra de Filtros de Sucursales y Rutas (Búsqueda, Sucursal, Ruta) -->
+            <div class="client-filters-container space-y-4">
+                <!-- Input de Búsqueda Principal -->
+                <div class="client-search-box">
+                    <span class="material-symbols-outlined client-search-icon">search</span>
+                    <input id="input-buscar-sucursal-ruta" type="text" oninput="filtrarSucursalesYRutasDebounced()" placeholder="Buscar por sucursal, ruta o ciudad..." class="client-search-input">
+                </div>
+
+                <!-- Selector de Filtros (Sucursal y Ruta) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-gray-100">
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-gray-600 mb-1.5 flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-[16px] text-gray-400">store</span> Filtrar por Sucursal
+                        </label>
+                        <select id="filtro-sucursal-select" onchange="filtrarSucursalesYRutas()" class="client-select-control">
+                            <option value="todas">Todas las sucursales</option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-gray-600 mb-1.5 flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-[16px] text-primary">route</span> Filtrar por Ruta / Zona
+                        </label>
+                        <select id="filtro-ruta-select" onchange="filtrarSucursalesYRutas()" class="client-select-control">
+                            <option value="todas">Todas las rutas</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 

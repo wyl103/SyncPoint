@@ -21,12 +21,24 @@ function switchTab(tabId) {
     const targetEl = document.getElementById(`tab-${tabId}`);
     if (targetEl) targetEl.classList.remove('hidden-view');
     
-    const titles = { 
-        dashboard: 'Eventos', 
-        clientes: 'Clientes'
-    };
     const headerTitle = document.getElementById('header-title');
-    if (headerTitle && titles[tabId]) headerTitle.innerText = titles[tabId];
+    const headerSubtabNav = document.getElementById('header-subtab-nav');
+
+    if (tabId === 'clientes') {
+        if (headerTitle) headerTitle.classList.add('hidden');
+        if (headerSubtabNav) headerSubtabNav.classList.remove('hidden');
+        if (typeof cambiarSubTabCliente === 'function') {
+            cambiarSubTabCliente('directorio');
+        } else if (typeof cargarClientes === 'function') {
+            cargarClientes();
+        }
+    } else {
+        if (headerSubtabNav) headerSubtabNav.classList.add('hidden');
+        if (headerTitle) {
+            headerTitle.classList.remove('hidden');
+            headerTitle.innerText = tabId === 'dashboard' ? 'Eventos' : 'OilBless';
+        }
+    }
 
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.classList.remove('text-charcoal', 'bg-primary/20');
@@ -42,14 +54,6 @@ function switchTab(tabId) {
         const icon = activeBtn.querySelector('.material-symbols-outlined');
         if (icon) icon.classList.add('filled');
     });
-
-    if (tabId === 'clientes') {
-        if (typeof cambiarSubTabCliente === 'function') {
-            cambiarSubTabCliente('directorio');
-        } else {
-            cargarClientes();
-        }
-    }
 }
 
 // Inicializador principal llamado al autenticarse o cargar la aplicación

@@ -2,6 +2,7 @@
 // app/integrations/chatwoot/ChatwootService.php
 require_once __DIR__ . '/../../services/Database.php';
 require_once __DIR__ . '/../../models/core/clientes.php';
+require_once __DIR__ . '/../../services/core/mensajes.php';
 
 class ChatwootService {
     private $baseUrl;
@@ -173,44 +174,27 @@ class ChatwootService {
 
     /**
      * Guardar o vincular el conversation_id de Chatwoot en la BD local en la tabla 'mensajes'
+     * utilizando el servicio MensajeService (CRUD de mensajes core/mensajes.php)
      */
-    private function guardarConversationIdLocal($clienteId, $conversationId) {
-        if (empty($clienteId) || empty($conversationId)) return;
+    private function guardarConversationIdLocal($conversationId) {
+        if (empty($conversationId)) return;
 
         try {
-            // 1. Obtener la recolección más reciente del cliente
-            $stmtR = $this->pdo->prepare("SELECT id FROM recolecciones WHERE cliente_id = :cliente_id ORDER BY id DESC LIMIT 1");
-            $stmtR->execute(['cliente_id' => $clienteId]);
-            $recoleccionId = $stmtR->fetchColumn();
+            $mensajeService = new MensajeService();
 
-            if (!$recoleccionId) {
-                // Crear recolección por defecto si no existe
-                $stmtNewR = $this->pdo->prepare("INSERT INTO recolecciones (cliente_id, estado, fecha_programada) VALUES (:cliente_id, 'pendiente', CURRENT_TIMESTAMP) RETURNING id");
-                $stmtNewR->execute(['cliente_id' => $clienteId]);
-                $recoleccionId = $stmtNewR->fetchColumn();
-            }
+            // Verificar si ya existe el registro de conversación en la tabla mensajes
+            $stmtM = $this->pdo->prepare("SELECT id FROM mensajes WHERE chatwoot_conversation_id = :conv_id ORDER BY id DESC LIMIT 1");
+            $stmtM->execute(['conv_id' => (string)$conversationId]);
+            $mensajeExistente = $stmtM->fetch();
 
-            if ($recoleccionId) {
-                // 2. Verificar si ya existe registro en la tabla mensajes
-                $stmtM = $this->pdo->prepare("SELECT id, chatwoot_conversation_id FROM mensajes WHERE recoleccion_id = :recoleccion_id ORDER BY id DESC LIMIT 1");
-                $stmtM->execute(['recoleccion_id' => $recoleccionId]);
-                $mensajeExistente = $stmtM->fetch();
-
-                if ($mensajeExistente) {
-                    if (empty($mensajeExistente['chatwoot_conversation_id'])) {
-                        $stmtU = $this->pdo->prepare("UPDATE mensajes SET chatwoot_conversation_id = :conv_id, fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = :id");
-                        $stmtU->execute(['conv_id' => (string)$conversationId, 'id' => $mensajeExistente['id']]);
-                    }
-                } else {
-                    $stmtI = $this->pdo->prepare("INSERT INTO mensajes (recoleccion_id, tipo_plantilla, estado, chatwoot_conversation_id, fecha_envio) VALUES (:recoleccion_id, 'aviso_ruta', 'enviado', :conv_id, CURRENT_TIMESTAMP)");
-                    $stmtI->execute([
-                        'recoleccion_id' => $recoleccionId,
-                        'conv_id' => (string)$conversationId
-                    ]);
-                }
+            if (!$mensajeExistente) {
+                $mensajeService->crearMensaje([
+                    'chatwoot_conversation_id' => (string)$conversationId,
+                    'estado' => 'enviado'
+                ]);
             }
         } catch (Exception $e) {
-            error_log("Error al vincular conversation_id localmente: " . $e->getMessage());
+            error_log("Error al guardar conversation_id localmente en mensajes: " . $e->getMessage());
         }
     }
 
@@ -231,25 +215,8 @@ class ChatwootService {
 
         $conversationId = null;
 
-        // 1. Buscar conversation_id en la tabla local 'mensajes' a través de recolecciones
-        $sql = "SELECT m.chatwoot_conversation_id 
-                FROM mensajes m 
-                INNER JOIN recolecciones r ON m.recoleccion_id = r.id 
-                WHERE r.cliente_id = :cliente_id 
-                  AND m.chatwoot_conversation_id IS NOT NULL 
-                  AND m.chatwoot_conversation_id != ''
-                ORDER BY m.id DESC LIMIT 1";
-        
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute(['cliente_id' => $clienteId]);
-        $row = $stmt->fetch();
-
-        if ($row && !empty($row['chatwoot_conversation_id'])) {
-            $conversationId = $row['chatwoot_conversation_id'];
-        }
-
-        // 2. Si no se encontró en la BD local, buscar por teléfono en la API de Chatwoot
-        if (!$conversationId && !empty($cliente['telefono_whatsapp'])) {
+        // 1. Buscar conversación por número de teléfono en la API de Chatwoot
+        if (!empty($cliente['telefono_whatsapp'])) {
             $contact = $this->searchContactByPhone($cliente['telefono_whatsapp']);
             if ($contact && isset($contact['id'])) {
                 $conversations = $this->getContactConversations($contact['id']);
@@ -259,9 +226,9 @@ class ChatwootService {
             }
         }
 
-        // Si se halló en Chatwoot y no estaba guardado en la BD local, vincularlo ahora
+        // Si se halló en Chatwoot, vincular/guardar conversation_id en la BD local
         if ($conversationId) {
-            $this->guardarConversationIdLocal($clienteId, $conversationId);
+            $this->guardarConversationIdLocal($conversationId);
         }
 
         // 3. Traer los mensajes de Chatwoot si tenemos un ID de conversación

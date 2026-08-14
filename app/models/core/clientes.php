@@ -45,7 +45,8 @@ class Cliente {
         $totalRows = (int)$stmtCount->fetchColumn();
 
         $page = max(1, (int)$page);
-        $limit = in_array((int)$limit, [10, 50, 100]) ? (int)$limit : 10;
+        $limitInt = (int)$limit;
+        $limit = ($limitInt > 0 && $limitInt <= 10000) ? $limitInt : 10;
         $offset = ($page - 1) * $limit;
 
         $dataSql = "SELECT 
