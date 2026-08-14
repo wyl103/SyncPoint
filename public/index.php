@@ -50,6 +50,7 @@ require_once __DIR__ . '/../app/views/layout/modals.php';
 <script src="js/modules/utils.js"></script>
 <script src="js/modules/dashboard.js"></script>
 <script src="js/modules/clientes.js"></script>
+<script src="js/modules/sucursales_rutas.js"></script>
 <script src="js/modules/chatwoot.js"></script>
 <script src="js/app.js"></script>
 

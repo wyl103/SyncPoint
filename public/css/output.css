@@ -1350,3 +1350,199 @@
   background-color: #ffffff;
 }
 
+/* --- MODALES Y OVERLAYS DE FONDO (BLUR OSCURO Y PADINGS) --- */
+#modal-cliente,
+#modal-sucursal-rapida,
+#modal-ruta-rapida {
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 1.5rem !important;
+  background-color: rgba(15, 23, 42, 0.65) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+#modal-cliente {
+  z-index: 50 !important;
+}
+
+#modal-sucursal-rapida,
+#modal-ruta-rapida {
+  z-index: 60 !important;
+  background-color: rgba(15, 23, 42, 0.75) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+#modal-cliente.hidden-view,
+#modal-sucursal-rapida.hidden-view,
+#modal-ruta-rapida.hidden-view {
+  display: none !important;
+}
+
+#modal-cliente > div {
+  width: 100% !important;
+  max-width: 640px !important;
+  background-color: #ffffff !important;
+  border-radius: 1.25rem !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35) !important;
+  border: 1px solid rgba(229, 231, 235, 0.8) !important;
+}
+
+#modal-sucursal-rapida > div,
+#modal-ruta-rapida > div {
+  width: 100% !important;
+  max-width: 420px !important;
+  background-color: #ffffff !important;
+  border-radius: 1.25rem !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45) !important;
+  border: 1px solid rgba(229, 231, 235, 0.9) !important;
+}
+
+/* --- DISEÑO DE BOTONES SISTEMA --- */
+
+/* 1. Botón Principal (Amarillo Primary) */
+.btn-primary-main {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.5rem !important;
+  background-color: #facc14 !important;
+  color: #2d3436 !important;
+  font-size: 0.8125rem !important;
+  font-weight: 700 !important;
+  padding: 0.625rem 1.25rem !important;
+  border-radius: 0.75rem !important;
+  border: 1px solid rgba(234, 179, 8, 0.4) !important;
+  box-shadow: 0 2px 4px rgba(250, 204, 20, 0.25) !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease-in-out !important;
+  white-space: nowrap !important;
+  outline: none !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+}
+.btn-primary-main:hover {
+  background-color: #eab308 !important;
+  box-shadow: 0 4px 10px rgba(234, 179, 8, 0.35) !important;
+  transform: translateY(-1px) !important;
+}
+.btn-primary-main:active {
+  transform: translateY(0) !important;
+}
+
+/* 2. Botón Secundario / Cancelar */
+.btn-secondary-main {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.5rem !important;
+  background-color: #ffffff !important;
+  color: #4b5563 !important;
+  font-size: 0.8125rem !important;
+  font-weight: 700 !important;
+  padding: 0.625rem 1.125rem !important;
+  border-radius: 0.75rem !important;
+  border: 1px solid #d1d5db !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease-in-out !important;
+  white-space: nowrap !important;
+  outline: none !important;
+  appearance: none !important;
+}
+.btn-secondary-main:hover {
+  background-color: #f3f4f6 !important;
+  color: #1f2937 !important;
+  border-color: #9ca3af !important;
+}
+
+/* 3. Botón Sub-acción Nueva Sucursal / Ruta (+ Nueva Ruta) */
+.btn-add-subaction {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.375rem !important;
+  background-color: #fef9c3 !important;
+  color: #854d0e !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  padding: 0.375rem 0.875rem !important;
+  border-radius: 0.625rem !important;
+  border: 1px solid #fef08a !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease-in-out !important;
+  white-space: nowrap !important;
+  outline: none !important;
+  appearance: none !important;
+}
+.btn-add-subaction:hover:not(:disabled) {
+  background-color: #fef08a !important;
+  color: #713f12 !important;
+  border-color: #fde047 !important;
+  box-shadow: 0 2px 5px rgba(234, 179, 8, 0.15) !important;
+}
+.btn-add-subaction:disabled {
+  background-color: #f3f4f6 !important;
+  color: #9ca3af !important;
+  border-color: #e5e7eb !important;
+  cursor: not-allowed !important;
+  opacity: 0.65 !important;
+}
+
+/* 4. Botón Editar en Tarjeta */
+.btn-card-edit {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.375rem !important;
+  background-color: #f3f4f6 !important;
+  color: #374151 !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  padding: 0.5rem 0.875rem !important;
+  border-radius: 0.75rem !important;
+  border: 1px solid #e5e7eb !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease-in-out !important;
+  white-space: nowrap !important;
+  outline: none !important;
+  appearance: none !important;
+}
+.btn-card-edit:hover {
+  background-color: #e5e7eb !important;
+  color: #111827 !important;
+  border-color: #d1d5db !important;
+}
+
+/* 5. Botón Chat en Tarjeta */
+.btn-card-chat {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.375rem !important;
+  background-color: #facc14 !important;
+  color: #2d3436 !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 0.75rem !important;
+  border: 1px solid rgba(234, 179, 8, 0.3) !important;
+  box-shadow: 0 1px 3px rgba(250, 204, 20, 0.2) !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease-in-out !important;
+  white-space: nowrap !important;
+  outline: none !important;
+  appearance: none !important;
+}
+.btn-card-chat:hover {
+  background-color: #eab308 !important;
+  box-shadow: 0 3px 8px rgba(234, 179, 8, 0.3) !important;
+}
+

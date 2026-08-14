@@ -21,7 +21,10 @@ function switchTab(tabId) {
     const targetEl = document.getElementById(`tab-${tabId}`);
     if (targetEl) targetEl.classList.remove('hidden-view');
     
-    const titles = { dashboard: 'Eventos', clientes: 'Directorio de Clientes' };
+    const titles = { 
+        dashboard: 'Eventos', 
+        clientes: 'Clientes'
+    };
     const headerTitle = document.getElementById('header-title');
     if (headerTitle && titles[tabId]) headerTitle.innerText = titles[tabId];
 
@@ -41,7 +44,11 @@ function switchTab(tabId) {
     });
 
     if (tabId === 'clientes') {
-        cargarClientes();
+        if (typeof cambiarSubTabCliente === 'function') {
+            cambiarSubTabCliente('directorio');
+        } else {
+            cargarClientes();
+        }
     }
 }
 

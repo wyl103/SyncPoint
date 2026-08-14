@@ -89,3 +89,183 @@
         </div>
     </div>
 </div>
+
+<!-- MODAL DE CREAR / EDITAR CLIENTE -->
+<div id="modal-cliente" onclick="if(event.target === this) cerrarModalCliente()" class="hidden-view fixed inset-0 z-50 bg-charcoal/40 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border border-gray-200 flex flex-col max-h-[90vh]">
+        <!-- Header -->
+        <div class="px-6 py-4 bg-white border-b border-gray-100 flex justify-between items-center shrink-0">
+            <h3 id="modal-cliente-titulo" class="font-bold text-charcoal text-lg flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">person_add</span>
+                <span id="txt-modal-cliente-accion">Nuevo Cliente</span>
+            </h3>
+            <button onclick="cerrarModalCliente()" class="p-1.5 rounded-full text-gray-400 hover:text-charcoal hover:bg-gray-100 transition">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <!-- Form Body (Scrollable) -->
+        <form id="form-cliente" onsubmit="guardarCliente(event)" class="p-6 overflow-y-auto space-y-4 flex-1">
+            <input type="hidden" id="form-cliente-id" value="">
+
+            <!-- Nombre -->
+            <div>
+                <label class="block text-xs font-bold text-gray-600 mb-1">Nombre Completo / Razón Social <span class="text-red-500">*</span></label>
+                <input type="text" id="form-cliente-nombre" required placeholder="Ej: Restaurante Don Pedro" class="w-full p-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-charcoal outline-none focus:border-primary focus:bg-white transition">
+            </div>
+
+            <!-- Teléfono WhatsApp -->
+            <div>
+                <label class="block text-xs font-bold text-gray-600 mb-1">Teléfono WhatsApp <span class="text-red-500">*</span></label>
+                <input type="text" id="form-cliente-telefono" required placeholder="Ej: 573119876543" class="w-full p-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-charcoal outline-none focus:border-primary focus:bg-white transition">
+            </div>
+
+            <!-- Sucursal con Botón + -->
+            <div>
+                <div class="flex justify-between items-center mb-1.5">
+                    <label class="block text-xs font-bold text-gray-700">Sucursal</label>
+                    <button type="button" onclick="abrirModalSucursalRapida()" class="btn-add-subaction" title="Crear nueva sucursal">
+                        <span class="material-symbols-outlined text-[15px]">add</span> Nueva Sucursal
+                    </button>
+                </div>
+                <!-- Searchable Select para Sucursal -->
+                <div id="wrapper-select-sucursal" class="relative">
+                    <input type="hidden" id="form-cliente-sucursal-id" value="">
+                    <div class="relative">
+                        <input type="text" id="search-sucursal-input" placeholder="Buscar sucursal..." autocomplete="off" onfocus="mostrarDropdownSearchable('sucursal')" oninput="filtrarDropdownSearchable('sucursal')" class="w-full p-3 pr-8 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-charcoal outline-none focus:border-primary focus:bg-white transition">
+                        <span class="material-symbols-outlined absolute right-3 top-3.5 text-gray-400 pointer-events-none text-[18px]">arrow_drop_down</span>
+                    </div>
+                    <div id="dropdown-sucursal-options" class="hidden absolute z-30 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto text-xs font-semibold text-gray-700"></div>
+                </div>
+            </div>
+
+            <!-- Ruta / Zona con Botón + -->
+            <div>
+                <div class="flex justify-between items-center mb-1.5">
+                    <label class="block text-xs font-bold text-gray-700">Ruta / Zona</label>
+                    <button type="button" id="btn-nueva-ruta-rapida" onclick="abrirModalRutaRapida()" disabled class="btn-add-subaction" title="Selecciona primero una sucursal para crear una ruta">
+                        <span class="material-symbols-outlined text-[15px]">add</span> Nueva Ruta
+                    </button>
+                </div>
+                <!-- Searchable Select para Ruta -->
+                <div id="wrapper-select-ruta" class="relative">
+                    <input type="hidden" id="form-cliente-ruta-id" value="">
+                    <div class="relative">
+                        <input type="text" id="search-ruta-input" placeholder="Selecciona primero una sucursal..." autocomplete="off" onfocus="mostrarDropdownSearchable('ruta')" oninput="filtrarDropdownSearchable('ruta')" class="w-full p-3 pr-8 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-charcoal outline-none focus:border-primary focus:bg-white transition">
+                        <span class="material-symbols-outlined absolute right-3 top-3.5 text-gray-400 pointer-events-none text-[18px]">arrow_drop_down</span>
+                    </div>
+                    <div id="dropdown-ruta-options" class="hidden absolute z-30 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto text-xs font-semibold text-gray-700"></div>
+                </div>
+            </div>
+
+            <!-- Frecuencia -->
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1.5">Frecuencia de Recolección</label>
+                <select id="form-cliente-frecuencia" onchange="alCambiarFrecuenciaCliente()" class="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-700 outline-none focus:border-primary focus:bg-white transition">
+                    <option value="">-- Seleccionar frecuencia --</option>
+                </select>
+            </div>
+
+            <!-- Campos adicionales para Frecuencia OTRA -->
+            <div id="box-frecuencia-otra" class="hidden p-4 bg-amber-50/90 border border-amber-200 rounded-2xl space-y-3 shadow-2xs">
+                <p class="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-amber-600 text-[18px]">info</span> Crear Nueva Frecuencia
+                </p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-700 mb-1">Nombre Frecuencia <span class="text-red-500">*</span></label>
+                        <input type="text" id="form-cliente-frecuencia-nombre" placeholder="Ej: Quincenal Especial" class="w-full p-2.5 rounded-xl border border-gray-200 bg-white text-xs font-semibold text-charcoal outline-none focus:border-primary">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-700 mb-1">Días (Intervalo) <span class="text-red-500">*</span></label>
+                        <input type="number" id="form-cliente-frecuencia-dias" min="1" placeholder="Ej: 15" class="w-full p-2.5 rounded-xl border border-gray-200 bg-white text-xs font-semibold text-charcoal outline-none focus:border-primary">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Próxima Fecha de Recolección (Fecha Base) -->
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1.5">Próxima Fecha de Recolección (Fecha Base)</label>
+                <input type="date" id="form-cliente-fecha-base" class="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-charcoal outline-none focus:border-primary focus:bg-white transition">
+            </div>
+
+            <!-- Estado -->
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1.5">Estado del Cliente</label>
+                <select id="form-cliente-estado" class="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-700 outline-none focus:border-primary focus:bg-white transition">
+                    <option value="no agendado">No Agendado</option>
+                    <option value="agendado">Agendado</option>
+                </select>
+            </div>
+
+            <!-- Footer con Botones -->
+            <div class="pt-4 border-t border-gray-100 flex items-center justify-end gap-3 shrink-0">
+                <button type="button" onclick="cerrarModalCliente()" class="btn-secondary-main">
+                    Cancelar
+                </button>
+                <button type="submit" id="btn-guardar-cliente" class="btn-primary-main">
+                    <span class="material-symbols-outlined text-[18px]">save</span> Guardar Cliente
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- SUB-MODAL NUEVA SUCURSAL RÁPIDA -->
+<div id="modal-sucursal-rapida" onclick="if(event.target === this) cerrarModalSucursalRapida()" class="hidden-view fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden border border-gray-200 p-6 space-y-4">
+        <div class="flex justify-between items-center border-b border-gray-100 pb-3">
+            <h4 class="font-bold text-charcoal text-base flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-[22px]">store</span>
+                Nueva Sucursal
+            </h4>
+            <button onclick="cerrarModalSucursalRapida()" class="p-1 rounded-full text-gray-400 hover:text-charcoal hover:bg-gray-100 transition"><span class="material-symbols-outlined text-[20px]">close</span></button>
+        </div>
+
+        <form id="form-sucursal-rapida" onsubmit="guardarSucursalRapida(event)" class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1.5">Nombre de la Sucursal <span class="text-red-500">*</span></label>
+                <input type="text" id="form-sucursal-nombre" required placeholder="Ej: Sucursal Neiva Norte" class="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-charcoal outline-none focus:border-primary focus:bg-white transition">
+            </div>
+            <div class="flex justify-end gap-3 pt-2">
+                <button type="button" onclick="cerrarModalSucursalRapida()" class="btn-secondary-main">Cancelar</button>
+                <button type="submit" class="btn-primary-main">Crear Sucursal</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- SUB-MODAL NUEVA RUTA RÁPIDA -->
+<div id="modal-ruta-rapida" onclick="if(event.target === this) cerrarModalRutaRapida()" class="hidden-view fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden border border-gray-200 p-6 space-y-4">
+        <div class="flex justify-between items-center border-b border-gray-100 pb-3">
+            <h4 class="font-bold text-charcoal text-base flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-[22px]">route</span>
+                Nueva Ruta / Zona
+            </h4>
+            <button onclick="cerrarModalRutaRapida()" class="p-1 rounded-full text-gray-400 hover:text-charcoal hover:bg-gray-100 transition"><span class="material-symbols-outlined text-[20px]">close</span></button>
+        </div>
+
+        <form id="form-ruta-rapida" onsubmit="guardarRutaRapida(event)" class="space-y-4">
+            <div class="bg-amber-50 p-3 rounded-xl border border-amber-200 text-xs font-bold text-amber-900 flex items-center gap-2">
+                <span class="material-symbols-outlined text-amber-600 text-[20px]">store</span>
+                <span>Sucursal: <strong id="lbl-ruta-sucursal-nombre" class="text-black font-extrabold">...</strong></span>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1.5">Nombre de la Ruta <span class="text-red-500">*</span></label>
+                <input type="text" id="form-ruta-nombre" required placeholder="Ej: Ruta Sabatina Centro" class="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-charcoal outline-none focus:border-primary focus:bg-white transition">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1.5">Ciudad <span class="text-red-500">*</span></label>
+                <input type="text" id="form-ruta-ciudad" required placeholder="Ej: Ibagué" class="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-charcoal outline-none focus:border-primary focus:bg-white transition">
+            </div>
+
+            <div class="flex justify-end gap-3 pt-2">
+                <button type="button" onclick="cerrarModalRutaRapida()" class="btn-secondary-main">Cancelar</button>
+                <button type="submit" class="btn-primary-main">Crear Ruta</button>
+            </div>
+        </form>
+    </div>
+</div>
