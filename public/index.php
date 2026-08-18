@@ -39,6 +39,15 @@ require_once __DIR__ . '/../app/views/auth/login.php';
                             Sucursales y Rutas
                         </button>
                     </div>
+                    <div id="header-subtab-usuarios-nav" class="hidden flex items-center gap-3 text-lg sm:text-xl tracking-tight">
+                        <button onclick="cambiarSubTabUsuario('directorio')" id="header-subtab-usuarios-directorio" class="text-charcoal font-extrabold cursor-pointer hover:text-black transition border-b-2 border-primary pb-0.5">
+                            Usuarios
+                        </button>
+                        <span class="text-gray-300 font-light text-base sm:text-lg">|</span>
+                        <button onclick="cambiarSubTabUsuario('programacion')" id="header-subtab-usuarios-programacion" class="text-gray-400 font-semibold cursor-pointer hover:text-charcoal transition border-b-2 border-transparent pb-0.5">
+                            Programación
+                        </button>
+                    </div>
                 </div>
                 <div class="flex gap-3 items-center">
                     <span id="user-name-display" class="text-sm font-semibold hidden md:block text-gray-500"></span>
@@ -52,15 +61,26 @@ require_once __DIR__ . '/../app/views/auth/login.php';
 
         <?php require_once __DIR__ . '/../app/views/dashboard/main.php'; ?>
 
-        <nav class="md:hidden bg-white border-t border-gray-200 px-6 py-3 flex justify-around items-center z-50 fixed bottom-0 w-full shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-            <button onclick="switchTab('dashboard')" class="nav-btn flex flex-col items-center gap-1 text-charcoal" data-target="dashboard">
-                <span class="material-symbols-outlined filled">event</span><span class="text-[10px] font-bold">Eventos</span>
+        <nav class="md:hidden bg-white border-t border-gray-200 py-2.5 px-2 flex justify-around items-center z-50 fixed bottom-0 left-0 right-0 w-full shadow-[0_-4px_12px_rgba(0,0,0,0.08)]">
+            <button onclick="switchTab('dashboard')" class="nav-btn flex-1 flex flex-col items-center justify-center gap-1 text-charcoal cursor-pointer" data-target="dashboard">
+                <span class="material-symbols-outlined text-[22px] filled">event</span>
+                <span class="text-[10px] font-bold">Eventos</span>
             </button>
-            <button onclick="switchTab('clientes')" class="nav-btn flex flex-col items-center gap-1 text-gray-400" data-target="clientes">
-                <span class="material-symbols-outlined">group</span><span class="text-[10px] font-bold">Clientes</span>
+            <button onclick="switchTab('clientes'); if(typeof cambiarSubTabCliente === 'function') cambiarSubTabCliente('directorio');" class="nav-btn flex-1 flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-charcoal cursor-pointer" data-target="clientes">
+                <span class="material-symbols-outlined text-[22px]">group</span>
+                <span class="text-[10px] font-bold">Clientes</span>
             </button>
-            <button id="btn-logout-mobile" class="nav-btn flex flex-col items-center gap-1 text-red-500">
-                <span class="material-symbols-outlined">menu</span><span class="text-[10px] font-bold">Salir</span>
+            <button onclick="switchTab('clientes'); if(typeof cambiarSubTabCliente === 'function') cambiarSubTabCliente('sucursales-rutas');" class="nav-btn flex-1 flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-charcoal cursor-pointer" data-target="sucursales-rutas">
+                <span class="material-symbols-outlined text-[22px]">route</span>
+                <span class="text-[10px] font-bold">Rutas</span>
+            </button>
+            <button onclick="switchTab('usuarios'); if(typeof cambiarSubTabUsuario === 'function') cambiarSubTabUsuario('directorio');" class="nav-btn flex-1 flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-charcoal cursor-pointer" data-target="usuarios">
+                <span class="material-symbols-outlined text-[22px]">settings</span>
+                <span class="text-[10px] font-bold">Configuración</span>
+            </button>
+            <button id="btn-logout-mobile" class="nav-btn flex-1 flex flex-col items-center justify-center gap-1 text-red-500 hover:text-red-600 cursor-pointer">
+                <span class="material-symbols-outlined text-[22px]">logout</span>
+                <span class="text-[10px] font-bold">Salir</span>
             </button>
         </nav>
     </div>
@@ -76,6 +96,7 @@ require_once __DIR__ . '/../app/views/layout/modals.php';
 <script src="js/modules/dashboard.js"></script>
 <script src="js/modules/clientes.js"></script>
 <script src="js/modules/sucursales_rutas.js"></script>
+<script src="js/modules/usuarios.js"></script>
 <script src="js/modules/chatwoot.js"></script>
 <script src="js/app.js"></script>
 

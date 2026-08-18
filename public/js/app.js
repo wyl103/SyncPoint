@@ -13,7 +13,7 @@ const API_BASE = `${APP_ROOT}/app/api`;
 
 // --- NAVEGACIÓN PRINCIPAL ENTRE PESTAÑAS ---
 function switchTab(tabId) {
-    ['tab-dashboard', 'tab-clientes'].forEach(id => {
+    ['tab-dashboard', 'tab-clientes', 'tab-usuarios'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.add('hidden-view');
     });
@@ -23,17 +23,29 @@ function switchTab(tabId) {
     
     const headerTitle = document.getElementById('header-title');
     const headerSubtabNav = document.getElementById('header-subtab-nav');
+    const headerSubtabUsuariosNav = document.getElementById('header-subtab-usuarios-nav');
 
     if (tabId === 'clientes') {
         if (headerTitle) headerTitle.classList.add('hidden');
+        if (headerSubtabUsuariosNav) headerSubtabUsuariosNav.classList.add('hidden');
         if (headerSubtabNav) headerSubtabNav.classList.remove('hidden');
         if (typeof cambiarSubTabCliente === 'function') {
             cambiarSubTabCliente('directorio');
         } else if (typeof cargarClientes === 'function') {
             cargarClientes();
         }
+    } else if (tabId === 'usuarios') {
+        if (headerTitle) headerTitle.classList.add('hidden');
+        if (headerSubtabNav) headerSubtabNav.classList.add('hidden');
+        if (headerSubtabUsuariosNav) headerSubtabUsuariosNav.classList.remove('hidden');
+        if (typeof cambiarSubTabUsuario === 'function') {
+            cambiarSubTabUsuario('directorio');
+        } else if (typeof cargarUsuarios === 'function') {
+            cargarUsuarios();
+        }
     } else {
         if (headerSubtabNav) headerSubtabNav.classList.add('hidden');
+        if (headerSubtabUsuariosNav) headerSubtabUsuariosNav.classList.add('hidden');
         if (headerTitle) {
             headerTitle.classList.remove('hidden');
             headerTitle.innerText = tabId === 'dashboard' ? 'Eventos' : 'OilBless';

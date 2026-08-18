@@ -51,7 +51,7 @@ try {
     // Encriptar la contraseña con el algoritmo BCrypt de PHP
     $claveHash = password_hash($password, PASSWORD_BCRYPT);
 
-    $stmtInsert = $pdo->prepare("INSERT INTO usuarios (nombre, correo, clave) VALUES (:nombre, :correo, :clave) RETURNING id");
+    $stmtInsert = $pdo->prepare("INSERT INTO usuarios (nombre, correo, clave, tipo) VALUES (:nombre, :correo, :clave, 'administrador') RETURNING id");
     $stmtInsert->execute([
         'nombre' => $nombre,
         'correo' => $correo,

@@ -397,3 +397,54 @@
     </div>
 </div>
 
+<!-- MODAL CREAR / EDITAR USUARIO -->
+<div id="modal-crear-usuario" class="hidden-view fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/65 backdrop-blur-md">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-gray-100 animate-in fade-in zoom-in duration-200">
+        <div class="flex justify-between items-center border-b border-gray-100 pb-3">
+            <h3 id="modal-usuario-titulo" class="font-bold text-charcoal text-lg flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">person_add</span> Nuevo Usuario
+            </h3>
+            <button onclick="cerrarModalCrearUsuario()" class="text-gray-400 hover:text-charcoal p-1 rounded-lg transition">
+                <span class="material-symbols-outlined text-xl">close</span>
+            </button>
+        </div>
+
+        <form id="form-crear-usuario" onsubmit="event.preventDefault(); guardarUsuario();" class="space-y-4">
+            <input type="hidden" id="form-usuario-id">
+
+            <div class="space-y-1">
+                <label class="block text-xs font-bold text-gray-700">Nombre Completo *</label>
+                <input id="form-usuario-nombre" type="text" required placeholder="Ej. Carlos Pérez" class="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:outline-none focus:border-primary">
+            </div>
+
+            <div class="space-y-1">
+                <label class="block text-xs font-bold text-gray-700">Correo Electrónico *</label>
+                <input id="form-usuario-correo" type="email" required placeholder="carlos@oilbless.com" class="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:outline-none focus:border-primary">
+            </div>
+
+            <div class="space-y-1">
+                <label class="block text-xs font-bold text-gray-700">Tipo de Usuario *</label>
+                <select id="form-usuario-tipo" class="w-full border border-gray-200 rounded-xl p-2.5 text-sm bg-white focus:outline-none focus:border-primary">
+                    <option value="normal">Normal</option>
+                    <option value="administrador">Administrador</option>
+                </select>
+            </div>
+
+            <div class="space-y-1">
+                <label class="block text-xs font-bold text-gray-700" id="lbl-usuario-password">Contraseña *</label>
+                <input id="form-usuario-password" type="password" placeholder="••••••••" class="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:outline-none focus:border-primary">
+                <span id="txt-usuario-pass-help" class="text-[11px] text-gray-400 block hidden">Dejar en blanco para mantener la contraseña actual.</span>
+            </div>
+
+            <div class="modal-footer-right pt-3 border-t border-gray-100 flex justify-end gap-2">
+                <button type="button" onclick="cerrarModalCrearUsuario()" class="btn-secondary-main">
+                    Cancelar
+                </button>
+                <button type="submit" id="btn-guardar-usuario" class="btn-primary-main">
+                    <span class="material-symbols-outlined text-[18px]">save</span> Guardar Usuario
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+

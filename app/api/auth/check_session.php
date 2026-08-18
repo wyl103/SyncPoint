@@ -28,12 +28,18 @@ try {
     }
 
     if (isset($_SESSION['user_id'])) {
+        $stmtUser = $pdo->prepare("SELECT COALESCE(tipo, 'administrador') AS tipo FROM usuarios WHERE id = :id");
+        $stmtUser->execute(['id' => $_SESSION['user_id']]);
+        $userRow = $stmtUser->fetch();
+        $userTipo = $userRow ? $userRow['tipo'] : ($_SESSION['user_tipo'] ?? 'administrador');
+
         echo json_encode([
             'authenticated' => true,
             'has_users' => true,
             'user' => [
                 'id' => $_SESSION['user_id'],
                 'nombre' => $_SESSION['user_nombre'] ?? 'Usuario',
+                'tipo' => $userTipo
             ]
         ]);
     } else {

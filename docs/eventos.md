@@ -200,17 +200,194 @@ Cuando un desarrollador del frontend o un modal modifique la frecuencia o fecha 
 2. **Al Agendar un Evento Tentativo desde el Dashboard**:
    El frontend debe enviar el estado `'programado'`, tipo `'frecuente'`, y `evento_origin: 'user'`:
 
-   ```javascript
-   await fetch('/app/api/core/eventos.php', {
-       method: 'POST',
-       headers: { 'Content-Type': 'application/json' },
-       body: JSON.stringify({
-           cliente_id: clienteId,
-           ruta_id: rutaId,
-           fecha_programada: fechaProgramada,
-           estado: 'programado',
-           tipo: 'frecuente',
-           evento_origin: 'user'
-       })
-   });
-   ```
+    ```javascript
+    await fetch('/app/api/core/eventos.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            cliente_id: clienteId,
+            ruta_id: rutaId,
+            fecha_programada: fechaProgramada,
+            estado: 'programado',
+            tipo: 'frecuente',
+            evento_origin: 'user'
+        })
+    });
+    ```
+
+---
+
+## 🧮 4. Nuevos Servicios de Cálculo y Agendamiento en Lote (`EventCalculatorService`)
+
+### 1. 🔢 Calcular Fechas por Cantidad de Ciclos (`/app/api/eventos/calcular_cantidad.php`)
+Calcula las próximas $N$ fechas proyectadas según la frecuencia configurada en el cliente.
+
+* **Método**: `POST` / `GET`
+* **URL**: `/app/api/eventos/calcular_cantidad.php`
+* **Parámetros**:
+  - `cliente_id` (`int`, Requerido): ID del cliente.
+  - `fecha_inicio` (`string YYYY-MM-DD`, Opcional): Fecha de partida (por defecto la `fecha_base` del cliente o el día de hoy).
+  - `cantidad` (`int`, Opcional): Cantidad de recolecciones a proyectar (por defecto `6`).
+
+#### Ejemplo cURL
+```bash
+curl -X POST "http://localhost:1019/app/api/eventos/calcular_cantidad.php" \
+  -H "Content-Type: application/json" \
+  -H "Cookie: PHPSESSID=tu_session_id" \
+  -d '{"cliente_id": 539, "cantidad": 4}'
+```
+
+#### Respuesta Exitosa (`200 OK`)
+```json
+{
+  "success": true,
+  "message": "Fechas proyectadas por cantidad calculadas correctamente.",
+  "data": {
+    "cliente_id": 539,
+    "cliente_nombre": "Restaurante El Sol",
+    "frecuencia_nombre": "Quincenal",
+    "frecuencia_dias": 15,
+    "fecha_inicio": "2026-08-20",
+    "cantidad": 4,
+    "fechas": [
+      "2026-08-20",
+      "2026-09-04",
+      "2026-09-19",
+      "2026-10-04"
+    ]
+  }
+}
+```
+
+---
+
+### 2. 📅 Calcular Fechas por Rango de Fechas (`/app/api/eventos/calcular_rango.php`)
+Calcula todas las fechas periódicas de recolección que caen dentro de un intervalo de fechas `desde` y `hasta`.
+
+* **Método**: `POST` / `GET`
+* **URL**: `/app/api/eventos/calcular_rango.php`
+* **Parámetros**:
+  - `cliente_id` (`int`, Requerido): ID del cliente.
+  - `desde` / `fecha_desde` (`string YYYY-MM-DD`, Requerido): Fecha inicial del rango.
+  - `hasta` / `fecha_hasta` (`string YYYY-MM-DD`, Requerido): Fecha final del rango.
+
+#### Ejemplo cURL
+```bash
+curl -X POST "http://localhost:1019/app/api/eventos/calcular_rango.php" \
+  -H "Content-Type: application/json" \
+  -H "Cookie: PHPSESSID=tu_session_id" \
+  -d '{"cliente_id": 539, "desde": "2026-08-20", "hasta": "2026-10-31"}'
+```
+
+#### Respuesta Exitosa (`200 OK`)
+```json
+{
+  "success": true,
+  "message": "Fechas proyectadas por rango calculadas correctamente.",
+  "data": {
+    "cliente_id": 539,
+    "cliente_nombre": "Restaurante El Sol",
+    "frecuencia_nombre": "Quincenal",
+    "frecuencia_dias": 15,
+    "fecha_desde": "2026-08-20",
+    "fecha_hasta": "2026-10-31",
+    "total_fechas": 5,
+    "fechas": [
+      "2026-08-20",
+      "2026-09-04",
+      "2026-09-19",
+      "2026-10-04",
+      "2026-10-19"
+    ]
+  }
+}
+```
+
+---
+
+### 3. 📌 Agendar Fechas en Lote / Bulk (`/app/api/eventos/agendar_lote.php`)
+Registra las fechas calculadas e inserta los eventos en la tabla `eventos`, previniendo duplicados si la fecha ya estaba agendada para ese cliente.
+
+* **Método**: `POST`
+* **URL**: `/app/api/eventos/agendar_lote.php`
+* **Cuerpo de la Petición**:
+  - `cliente_id` (`int`, Requerido)
+  - `fechas` (`array of YYYY-MM-DD`, Requerido)
+  - `ruta_id` (`int`, Opcional)
+  - `estado` (`string`, Opcional, por defecto `'programado'`)
+  - `tipo` (`string`, Opcional, por defecto `'frecuente'`)
+  - `evento_origin` (`string/int`, Opcional, por defecto `'user'`)
+
+#### Ejemplo cURL
+```bash
+curl -X POST "http://localhost:1019/app/api/eventos/agendar_lote.php" \
+  -H "Content-Type: application/json" \
+  -H "Cookie: PHPSESSID=tu_session_id" \
+  -d '{
+    "cliente_id": 539,
+    "fechas": ["2026-08-20", "2026-09-04", "2026-09-19"],
+    "estado": "programado",
+    "tipo": "frecuente"
+  }'
+```
+
+#### Respuesta Exitosa (`200 OK`)
+```json
+{
+  "success": true,
+  "message": "Fechas agendadas correctamente en lote.",
+  "data": {
+    "cliente_id": 539,
+    "cliente_nombre": "Restaurante El Sol",
+    "eventos_creados": 3,
+    "eventos_existentes": 0,
+    "eventos": [
+      { "id": 101, "fecha_programada": "2026-08-20" },
+      { "id": 102, "fecha_programada": "2026-09-04" },
+      { "id": 103, "fecha_programada": "2026-09-19" }
+    ]
+  }
+}
+```
+
+---
+
+### 4. 🌐 Programación Global Masiva por Horizonte de Días (`/app/api/eventos/programar_global.php`)
+Identifica la fecha agendada más lejana en la base de datos, proyecta los días faltantes para completar el horizonte especificado (por defecto 30 días), ajusta cada fecha al día de la semana que indique el nombre de la Ruta asignada al cliente y agenda masivamente los eventos faltantes.
+
+* **Método**: `POST`
+* **URL**: `/app/api/eventos/programar_global.php`
+* **Cuerpo de la Petición**:
+  - `dias_horizonte` (`int`, Opcional): Días a proyectar desde la fecha más lejana (por defecto `30`).
+
+#### Ejemplo cURL
+```bash
+curl -X POST "http://localhost:1019/app/api/eventos/programar_global.php" \
+  -H "Content-Type: application/json" \
+  -H "Cookie: PHPSESSID=tu_session_id" \
+  -d '{"dias_horizonte": 30}'
+```
+
+#### Respuesta Exitosa (`200 OK`)
+```json
+{
+  "success": true,
+  "message": "Eventos programados masivamente correctamente para los próximos 30 días.",
+  "data": {
+    "fecha_mas_lejana_actual": "2026-08-20",
+    "fecha_proyectada_hasta": "2026-09-19",
+    "dias_horizonte": 30,
+    "clientes_procesados": 12,
+    "total_eventos_creados": 24,
+    "total_eventos_existentes": 5,
+    "detalle": [
+      {
+        "cliente_id": 539,
+        "nombre": "Restaurante El Sol",
+        "ruta": "Ruta Lunes",
+        "fechas_agendadas": 2
+      }
+    ]
+  }
+}
+```

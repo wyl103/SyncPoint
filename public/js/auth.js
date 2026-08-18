@@ -166,9 +166,23 @@ document.addEventListener('DOMContentLoaded', () => {
         if (viewRegisterFirst) viewRegisterFirst.classList.add('hidden-view');
         if (viewApp) viewApp.classList.remove('hidden-view');
 
+        window.currentUser = user;
+
         const userDisplay = document.getElementById('user-name-display');
         if (userDisplay && user) userDisplay.innerText = user.nombre || 'Usuario';
         
+        // Control de visibilidad del menú Usuarios para Administradores
+        const userTipo = (user?.tipo || 'normal').toLowerCase();
+        const isAdmin = (userTipo === 'administrador' || userTipo === 'admin');
+        
+        document.querySelectorAll('.nav-btn[data-target="usuarios"]').forEach(btn => {
+            if (isAdmin) {
+                btn.classList.remove('hidden');
+            } else {
+                btn.classList.add('hidden');
+            }
+        });
+
         const targetUrl = (BASE_PATH || '') + '/dash';
         if (window.location.pathname !== targetUrl && targetUrl !== '/dash') {
             window.history.pushState({}, '', targetUrl);

@@ -474,12 +474,29 @@ function cambiarSubTabCliente(subTab) {
     const activeTextClass = 'text-charcoal font-extrabold cursor-pointer hover:text-black transition border-b-2 border-primary pb-0.5';
     const inactiveTextClass = 'text-gray-400 font-semibold cursor-pointer hover:text-charcoal transition border-b-2 border-transparent pb-0.5';
 
+    const mobileBtnDirectorio = document.querySelector('.nav-btn[data-target="clientes"]');
+    const mobileBtnSucRutas = document.querySelector('.nav-btn[data-target="sucursales-rutas"]');
+
     if (subTab === 'directorio') {
         viewDirectorio.classList.remove('hidden-view');
         viewSucRutas.classList.add('hidden-view');
 
         if (btnDirectorio) btnDirectorio.className = activeTextClass;
         if (btnSucRutas) btnSucRutas.className = inactiveTextClass;
+
+        if (mobileBtnDirectorio) {
+            mobileBtnDirectorio.classList.remove('text-gray-400');
+            mobileBtnDirectorio.classList.add('text-charcoal');
+            const icon = mobileBtnDirectorio.querySelector('.material-symbols-outlined');
+            if (icon) icon.classList.add('filled');
+        }
+        if (mobileBtnSucRutas) {
+            mobileBtnSucRutas.classList.remove('text-charcoal');
+            mobileBtnSucRutas.classList.add('text-gray-400');
+            const icon = mobileBtnSucRutas.querySelector('.material-symbols-outlined');
+            if (icon) icon.classList.remove('filled');
+        }
+
         if (typeof cargarClientes === 'function') cargarClientes();
     } else if (subTab === 'sucursales-rutas') {
         viewDirectorio.classList.add('hidden-view');
@@ -487,6 +504,20 @@ function cambiarSubTabCliente(subTab) {
 
         if (btnSucRutas) btnSucRutas.className = activeTextClass;
         if (btnDirectorio) btnDirectorio.className = inactiveTextClass;
+
+        if (mobileBtnSucRutas) {
+            mobileBtnSucRutas.classList.remove('text-gray-400');
+            mobileBtnSucRutas.classList.add('text-charcoal');
+            const icon = mobileBtnSucRutas.querySelector('.material-symbols-outlined');
+            if (icon) icon.classList.add('filled');
+        }
+        if (mobileBtnDirectorio) {
+            mobileBtnDirectorio.classList.remove('text-charcoal');
+            mobileBtnDirectorio.classList.add('text-gray-400');
+            const icon = mobileBtnDirectorio.querySelector('.material-symbols-outlined');
+            if (icon) icon.classList.remove('filled');
+        }
+
         cargarSucursalesYRutas();
     }
 }

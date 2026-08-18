@@ -227,4 +227,71 @@
         </div>
     </div>
 
+    <!-- ==================== PESTAÑA USUARIOS ==================== -->
+    <div id="tab-usuarios" class="hidden-view space-y-6 max-w-4xl mx-auto pb-20 md:pb-0">
+        
+        <!-- SUBTAB 1: Directorio de Usuarios -->
+        <div id="subtab-directorio-usuarios" class="space-y-4">
+            <!-- Barra de Búsqueda -->
+            <div class="relative w-full">
+                <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">search</span>
+                <input id="input-buscar-usuario" type="text" oninput="filtrarUsuariosDebounced()" placeholder="Buscar usuario por nombre o correo..." class="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary shadow-xs">
+            </div>
+
+            <!-- Botón Nuevo Usuario debajo de la búsqueda -->
+            <button onclick="abrirModalCrearUsuario()" class="w-full bg-white border border-gray-200 text-charcoal p-3 rounded-xl font-bold shadow-xs hover:bg-gray-50 flex justify-center items-center gap-2 transition">
+                <span class="material-symbols-outlined text-primary">person_add</span> Nuevo Usuario
+            </button>
+
+            <!-- Lista de Usuarios -->
+            <div id="lista-usuarios" class="grid gap-3">
+                <!-- Se renderiza mediante JS usuarios.js -->
+            </div>
+
+            <!-- Paginación de Usuarios -->
+            <div id="paginacion-usuarios" class="flex justify-between items-center bg-white border border-gray-200 p-3 rounded-xl shadow-xs">
+                <!-- Renderizado por JS usuarios.js -->
+            </div>
+        </div>
+
+        <!-- SUBTAB 2: Programación -->
+        <div id="subtab-programacion-usuarios" class="hidden-view space-y-6">
+            <div class="bg-white border border-gray-200 p-6 rounded-2xl shadow-xs space-y-6">
+                <div class="flex items-center gap-3 border-b border-gray-100 pb-4">
+                    <div class="p-3 bg-primary/20 text-charcoal rounded-xl shrink-0">
+                        <span class="material-symbols-outlined text-2xl">event_repeat</span>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-charcoal">Programación Automática de Eventos</h2>
+                        <p class="text-xs text-gray-500">Calcula la fecha agendada más lejana en el sistema y genera los eventos faltantes exclusivamente para clientes con fecha base asignada y el día de su ruta.</p>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 border border-slate-200 p-5 rounded-2xl space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700">Días de Proyección (Horizonte)</label>
+                            <span class="text-xs text-gray-500">Días adicionales a programar a partir de la fecha más lejana existente</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input id="input-dias-horizonte" type="number" min="1" max="365" value="30" class="w-24 border border-gray-300 rounded-xl p-2.5 text-center text-sm font-bold bg-white focus:outline-none focus:border-primary">
+                            <span class="text-xs font-bold text-gray-600">Días</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+                        <p class="text-xs text-gray-500 font-medium">Ajusta automáticamente las fechas de recolección al día de la semana configurado en la Ruta de cada cliente.</p>
+                        <button onclick="ejecutarProgramacionGlobalEventos()" id="btn-programar-eventos-global" class="w-full sm:w-auto bg-primary hover:bg-yellow-400 text-charcoal font-extrabold px-6 py-3 rounded-xl text-sm flex items-center justify-center gap-2 shadow-xs transition shrink-0 cursor-pointer">
+                            <span class="material-symbols-outlined text-[20px]">calendar_month</span> Programar Eventos
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Resultado de la Ejecución -->
+                <div id="resultado-programacion-global" class="hidden space-y-3">
+                    <!-- Se llena mediante JS -->
+                </div>
+            </div>
+        </div>
+    </div>
 </main>

@@ -203,6 +203,7 @@
 /* --- MODALES Y OVERLAYS DE FONDO (BLUR OSCURO Y PADINGS) --- */
 #modal-cliente,
 #modal-programar-recoleccion,
+#modal-crear-usuario,
 #modal-sucursal-rapida,
 #modal-ruta-rapida {
   position: fixed !important;
@@ -220,7 +221,8 @@
 }
 
 #modal-cliente,
-#modal-programar-recoleccion {
+#modal-programar-recoleccion,
+#modal-crear-usuario {
   z-index: 50 !important;
 }
 
@@ -244,6 +246,7 @@
 
 #modal-cliente.hidden-view,
 #modal-programar-recoleccion.hidden-view,
+#modal-crear-usuario.hidden-view,
 #modal-sucursal-rapida.hidden-view,
 #modal-ruta-rapida.hidden-view,
 #modal-confirmar-frecuencia.hidden-view {
@@ -251,9 +254,10 @@
 }
 
 #modal-cliente > div,
-#modal-programar-recoleccion > div {
+#modal-programar-recoleccion > div,
+#modal-crear-usuario > div {
   width: 100% !important;
-  max-width: 640px !important;
+  max-width: 520px !important;
   background-color: #ffffff !important;
   border-radius: 1.25rem !important;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35) !important;

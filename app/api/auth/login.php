@@ -33,7 +33,7 @@ try {
     $db = new Database();
     $pdo = $db->getConnection();
 
-    $stmt = $pdo->prepare("SELECT id, nombre, clave FROM usuarios WHERE LOWER(TRIM(correo)) = LOWER(TRIM(?))");
+    $stmt = $pdo->prepare("SELECT id, nombre, clave, COALESCE(tipo, 'administrador') AS tipo FROM usuarios WHERE LOWER(TRIM(correo)) = LOWER(TRIM(?))");
     $stmt->execute([$correo]);
     $usuario = $stmt->fetch();
 
@@ -42,6 +42,7 @@ try {
         
         $_SESSION['user_id'] = $usuario['id'];
         $_SESSION['user_nombre'] = $usuario['nombre'];
+        $_SESSION['user_tipo'] = $usuario['tipo'];
         $_SESSION['last_activity'] = time();
         
         echo json_encode([
@@ -49,7 +50,8 @@ try {
             'message' => 'Login exitoso',
             'user' => [
                 'id' => $usuario['id'],
-                'nombre' => $usuario['nombre']
+                'nombre' => $usuario['nombre'],
+                'tipo' => $usuario['tipo']
             ]
         ]);
     } else {

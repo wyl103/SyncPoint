@@ -4,6 +4,41 @@
 let recoleccionesDelDia = [];
 let mesActual = new Date();
 
+function obtenerBadgeEstado(estado, esTentativa) {
+    if (esTentativa || estado === 'tentativa') {
+        return { text: 'TENTATIVA', class: 'bg-blue-50 text-blue-700 border-blue-200' };
+    }
+
+    const est = (estado || 'programada').toLowerCase();
+
+    switch (est) {
+        case 'programado':
+        case 'programada':
+            return { text: 'PROGRAMADA', class: 'bg-amber-50 text-amber-800 border-amber-200' };
+        case 'notificacion1':
+            return { text: 'NOTIFICACIÓN 1', class: 'bg-sky-50 text-sky-800 border-sky-200' };
+        case 'notificacion2':
+            return { text: 'NOTIFICACIÓN 2', class: 'bg-indigo-50 text-indigo-800 border-indigo-200' };
+        case 'notificacion3':
+            return { text: 'NOTIFICACIÓN 3', class: 'bg-purple-50 text-purple-800 border-purple-200' };
+        case 'aceptada':
+            return { text: 'ACEPTADA', class: 'bg-emerald-50 text-emerald-800 border-emerald-200' };
+        case 'denegada':
+            return { text: 'DENEGADA', class: 'bg-rose-50 text-rose-800 border-rose-200' };
+        case 'error':
+            return { text: 'ERROR', class: 'bg-red-100 text-red-900 border-red-300' };
+        case 'completada':
+            return { text: 'COMPLETADA', class: 'bg-green-50 text-green-800 border-green-200' };
+        case 'cancelada':
+            return { text: 'CANCELADA', class: 'bg-red-50 text-red-800 border-red-200' };
+        case 'agendado':
+        case 'agendada':
+            return { text: 'AGENDADA', class: 'bg-teal-50 text-teal-800 border-teal-200' };
+        default:
+            return { text: est.toUpperCase(), class: 'bg-gray-100 text-gray-700 border-gray-200' };
+    }
+}
+
 function setupBotonesDias() {
     const hoy = new Date();
     const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
@@ -95,46 +130,53 @@ async function renderDia(fechaIso, titulo, btnElement) {
 
                 const grupoContainer = document.getElementById(`grupo-${key}`);
 
-                grupo.recolecciones.forEach(rec => {
-                    let esTentativa = rec.es_tentativa || rec.estado_recoleccion === 'tentativa';
-                    let colorEstado = esTentativa ? 'bg-blue-50 text-blue-800 border-blue-200' :
-                                     (rec.estado_recoleccion === 'completada' ? 'bg-green-50 text-green-800 border-green-200' : 
-                                     (rec.estado_recoleccion === 'cancelada' ? 'bg-red-50 text-red-800 border-red-200' : 'bg-yellow-50 text-yellow-800 border-yellow-200'));
+            grupo.recolecciones.forEach(rec => {
+                let esTentativa = rec.es_tentativa || rec.estado_recoleccion === 'tentativa';
+                let estadoValor = rec.estado_recoleccion || rec.estado || 'programada';
+                let badge = obtenerBadgeEstado(estadoValor, esTentativa);
 
-                    let estadoTexto = esTentativa ? 'TENTATIVA' : (rec.estado_recoleccion || 'AGENDADO');
-
-                    grupoContainer.innerHTML += `
-                        <div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3 hover:border-primary transition">
-                            <div class="flex-1 cursor-pointer" onclick="verDetallesRecoleccion(${rec.id || 'null'})">
-                                <div class="flex items-center gap-2">
-                                    <h3 class="font-bold text-charcoal text-lg">${rec.cliente_nombre}</h3>
-                                    ${rec.frecuencia_nombre ? `<span class="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-bold">${rec.frecuencia_nombre}</span>` : ''}
-                                </div>
-                                <div class="flex items-center gap-3 mt-1">
-                                    <p class="text-xs font-semibold text-gray-500 flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">call</span>${rec.telefono_whatsapp || 'Sin número'}</p>
-                                    ${rec.fecha_base ? `<p class="text-xs text-gray-400 font-semibold">Base: ${rec.fecha_base}</p>` : '<p class="text-xs text-amber-600 font-semibold">Sin fecha base</p>'}
-                                </div>
+                grupoContainer.innerHTML += `
+                    <div class="bg-white border border-gray-200 p-4 rounded-2xl shadow-xs flex flex-col justify-between gap-3 hover:border-primary/70 transition">
+                        <!-- Sección Superior: Información del Cliente -->
+                        <div class="cursor-pointer min-w-0" onclick="verDetallesRecoleccion(${rec.id || 'null'})">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h3 class="font-bold text-charcoal text-base truncate">${rec.cliente_nombre}</h3>
+                                ${rec.frecuencia_nombre ? `<span class="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md font-semibold shrink-0">${rec.frecuencia_nombre}</span>` : ''}
                             </div>
-                            <div class="flex items-center gap-2 justify-between border-t md:border-t-0 border-gray-100 pt-3 md:pt-0">
-                                <span class="flex items-center gap-1 text-xs font-bold text-gray-600 bg-gray-100 px-2 py-1 rounded-md">
-                                    <span class="material-symbols-outlined text-[16px] text-primary">route</span>Ruta ${rec.ruta_nombre || 'N/A'}
+
+                            <!-- Estado con letras pequeñas y elegantes debajo del nombre -->
+                            <div class="mt-1">
+                                <span class="inline-flex items-center px-2 py-0.5 border text-[10px] font-bold rounded-md uppercase tracking-wider ${badge.class}">
+                                    ${badge.text}
                                 </span>
-                                <span class="px-2 py-1 border text-[10px] font-bold rounded uppercase ${colorEstado}">
-                                    ${estadoTexto}
-                                </span>
+                            </div>
+
+                            <div class="flex items-center gap-3 mt-2 flex-wrap">
+                                <p class="text-xs font-semibold text-gray-500 flex items-center gap-1 shrink-0"><span class="material-symbols-outlined text-[14px]">call</span>${rec.telefono_whatsapp || 'Sin número'}</p>
+                                ${rec.fecha_base ? `<p class="text-xs text-gray-400 font-semibold shrink-0">Base: ${rec.fecha_base}</p>` : '<p class="text-xs text-amber-600 font-semibold shrink-0">Sin fecha base</p>'}
+                            </div>
+                        </div>
+
+                        <!-- Sección Inferior: Botones y Ruta separados por línea divisoria con justify-between -->
+                        <div class="pt-3 border-t border-gray-100 flex items-center justify-between w-full gap-2">
+                            <span class="flex items-center gap-1 text-xs font-semibold text-gray-600 bg-gray-100 px-2.5 py-1 rounded-lg shrink-0">
+                                <span class="material-symbols-outlined text-[16px] text-amber-500">route</span>Ruta ${rec.ruta_nombre || 'N/A'}
+                            </span>
+                            <div class="flex items-center gap-2 shrink-0">
                                 ${esTentativa ? `
-                                <button onclick="agendarEventoTentativo(${rec.cliente_id}, ${rec.ruta_id || 'null'}, '${rec.fecha_programada}')" class="px-2.5 py-1 rounded-lg bg-primary hover:bg-yellow-400 text-charcoal font-bold text-xs flex items-center gap-1 transition shadow-2xs" title="Convertir en evento agendado">
+                                <button onclick="agendarEventoTentativo(${rec.cliente_id}, ${rec.ruta_id || 'null'}, '${rec.fecha_programada}')" class="px-2.5 py-1 rounded-lg bg-primary hover:bg-yellow-400 text-charcoal font-bold text-xs flex items-center gap-1 transition shadow-2xs shrink-0" title="Convertir en evento agendado">
                                     <span class="material-symbols-outlined text-[15px]">event_available</span>
                                     <span>Agendar</span>
                                 </button>` : ''}
                                 ${rec.cliente_id ? `
-                                <button onclick="abrirModalChatwoot(${rec.cliente_id}, '${(rec.cliente_nombre || '').replace(/'/g, "\\'")}')" class="p-1.5 rounded-lg bg-primary/20 hover:bg-yellow-400 text-charcoal transition" title="Abrir Chat de WhatsApp">
+                                <button onclick="abrirModalChatwoot(${rec.cliente_id}, '${(rec.cliente_nombre || '').replace(/'/g, "\\'")}')" class="p-1.5 rounded-lg bg-gray-100 hover:bg-primary/20 text-charcoal transition shrink-0" title="Abrir Chat de WhatsApp">
                                     <span class="material-symbols-outlined text-[18px]">forum</span>
                                 </button>` : ''}
                             </div>
                         </div>
-                    `;
-                });
+                    </div>
+                `;
+            });
             }
         }
     } catch (error) {
@@ -611,6 +653,7 @@ async function procesarProgramacionRecoleccion(tipoCambio) {
 }
 
 // Exponer funciones globales
+window.obtenerBadgeEstado = obtenerBadgeEstado;
 window.abrirModalProgramarRecoleccion = abrirModalProgramarRecoleccion;
 window.cerrarModalProgramarRecoleccion = cerrarModalProgramarRecoleccion;
 window.alCambiarSucursalModalProg = alCambiarSucursalModalProg;
