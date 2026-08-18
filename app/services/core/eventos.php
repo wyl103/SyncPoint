@@ -32,10 +32,10 @@ class EventoService {
         $clienteId = !empty($datos['cliente_id']) ? $datos['cliente_id'] : null;
         $rutaId = !empty($datos['ruta_id']) ? $datos['ruta_id'] : null;
         $fechaProgramada = $datos['fecha_programada'];
-        $estado = !empty($datos['estado']) ? $datos['estado'] : 'pendiente';
-        $tipo = !empty($datos['tipo']) ? trim($datos['tipo']) : null;
+        $estado = !empty($datos['estado']) ? $datos['estado'] : 'programado';
+        $tipo = !empty($datos['tipo']) ? trim($datos['tipo']) : 'frecuente';
         $notificaciones = isset($datos['notificaciones']) ? $datos['notificaciones'] : null;
-        $eventoOrigin = !empty($datos['evento_origin']) ? $datos['evento_origin'] : null;
+        $eventoOrigin = !empty($datos['evento_origin']) ? $datos['evento_origin'] : 'sistem';
 
         return $this->eventoModel->create($clienteId, $rutaId, $fechaProgramada, $estado, $tipo, $notificaciones, $eventoOrigin);
     }

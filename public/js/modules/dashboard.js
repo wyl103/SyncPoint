@@ -554,45 +554,50 @@ async function procesarProgramacionRecoleccion(tipoCambio) {
     if (btnAplicar) { btnAplicar.disabled = true; btnAplicar.innerText = "Procesando..."; }
 
     try {
-        // 1. Si elige "todas", actualizamos la fecha_base del cliente
         if (tipoCambio === 'todas') {
-            const resCliente = await fetch(`${API_BASE}/core/clientes.php?id=${clienteId}`, {
-                method: 'PUT',
+            // Llamada al servicio oficial de recálculo por cambio de fecha_base/frecuencia
+            const resRecalculo = await fetch(`${API_BASE}/eventos/recalcular.php`, {
+                method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    id: clienteId,
-                    nombre: clienteSeleccionadoProg.nombre,
-                    telefono_whatsapp: clienteSeleccionadoProg.telefono_whatsapp,
-                    fecha_base: fechaProg,
-                    estado: 'agendado'
+                    cliente_id: parseInt(clienteId),
+                    fecha_cambio: fechaProg,
+                    frecuencia_id: clienteSeleccionadoProg?.frecuencia_id || null,
+                    evento_origin: 'user'
                 })
             });
-            const dataCliente = await resCliente.json();
-            if (!dataCliente.success) {
-                console.warn("Advertencia actualizando cliente:", dataCliente.message);
+
+            const dataRecalculo = await resRecalculo.json();
+
+            if (dataRecalculo.success) {
+                cerrarModalProgramarRecoleccion();
+                recargarDiaActual();
+            } else {
+                alert(dataRecalculo.message || "Error al recalcular las recolecciones.");
             }
-        }
-
-        // 2. Crear evento programado en recolecciones/eventos
-        const resEvento = await fetch(`${API_BASE}/core/eventos.php`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                cliente_id: parseInt(clienteId),
-                ruta_id: clienteSeleccionadoProg.ruta_id || null,
-                fecha_programada: fechaProg,
-                estado: 'agendado',
-                tipo: 'programada'
-            })
-        });
-
-        const dataEvento = await resEvento.json();
-
-        if (dataEvento.success || resEvento.ok) {
-            cerrarModalProgramarRecoleccion();
-            recargarDiaActual();
         } else {
-            alert(dataEvento.message || "Error al programar la recolección.");
+            // Recolección puntual "solo por esta vez"
+            const resEvento = await fetch(`${API_BASE}/core/eventos.php`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    cliente_id: parseInt(clienteId),
+                    ruta_id: clienteSeleccionadoProg?.ruta_id || null,
+                    fecha_programada: fechaProg,
+                    estado: 'programado',
+                    tipo: 'unica',
+                    evento_origin: null
+                })
+            });
+
+            const dataEvento = await resEvento.json();
+
+            if (dataEvento.success || resEvento.ok) {
+                cerrarModalProgramarRecoleccion();
+                recargarDiaActual();
+            } else {
+                alert(dataEvento.message || "Error al programar la recolección.");
+            }
         }
     } catch (err) {
         console.error("Error al programar recolección:", err);
