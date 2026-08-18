@@ -336,8 +336,8 @@
                 <input type="date" id="form-prog-fecha" required class="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-charcoal outline-none focus:border-primary focus:bg-white transition">
             </div>
 
-            <!-- Footer con Botones -->
-            <div class="pt-4 border-t border-gray-100 flex items-center justify-end gap-3 shrink-0">
+            <!-- Footer con Botones Separados a la Derecha -->
+            <div class="modal-footer-right">
                 <button type="button" onclick="cerrarModalProgramarRecoleccion()" class="btn-secondary-main">
                     Cancelar
                 </button>
@@ -351,9 +351,10 @@
 
 <!-- SUB-MODAL CONFIRMACIÓN DE FRECUENCIA / EVENTO PUNTUAL -->
 <div id="modal-confirmar-frecuencia" onclick="if(event.target === this) cerrarModalConfirmarFrecuencia()" class="hidden-view fixed inset-0 z-50 bg-charcoal/50 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-gray-200 p-6 space-y-5">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-gray-200 p-6 flex flex-col gap-4">
+        <!-- Header / Preambulo -->
         <div class="flex items-start gap-3">
-            <div class="bg-amber-100 text-amber-700 p-3 rounded-full shrink-0">
+            <div class="bg-amber-100 text-amber-700 p-3 rounded-2xl shrink-0 flex items-center justify-center">
                 <span class="material-symbols-outlined text-2xl">help_outline</span>
             </div>
             <div>
@@ -364,7 +365,8 @@
             </div>
         </div>
 
-        <div class="space-y-3 pt-2">
+        <!-- Botones de Opciones con Espaciado Generoso (Gap) -->
+        <div class="confirm-options-container">
             <button type="button" onclick="procesarProgramacionRecoleccion('todas')" class="btn-confirm-option-primary">
                 <div class="bg-yellow-400/30 text-amber-900 p-2.5 rounded-xl shrink-0 flex items-center justify-center">
                     <span class="material-symbols-outlined text-2xl">update</span>
@@ -386,9 +388,10 @@
             </button>
         </div>
 
-        <div class="flex justify-end pt-1 border-t border-gray-100">
-            <button type="button" onclick="cerrarModalConfirmarFrecuencia()" class="text-xs font-bold text-gray-500 hover:text-charcoal px-3 py-1.5 rounded-lg hover:bg-gray-100 transition">
-                Cancelar
+        <!-- Footer con Botón Cancelar en Rojo en la parte inferior derecha -->
+        <div class="modal-footer-right">
+            <button type="button" onclick="cerrarModalConfirmarFrecuencia()" class="btn-confirm-cancel">
+                <span class="material-symbols-outlined text-[18px]">close</span> Cancelar
             </button>
         </div>
     </div>
