@@ -6,8 +6,8 @@
             <label id="lbl-mes" onclick="changeDashView('mes')" class="flex h-full flex-1 cursor-pointer items-center justify-center rounded-lg text-sm font-semibold text-gray-500 transition-all">Mes</label>
         </div>
         
-        <button onclick="openModal('modal-add-client')" class="w-full bg-primary text-charcoal p-3 rounded-xl font-bold shadow-sm hover:bg-yellow-400 flex justify-center items-center gap-2 transition">
-            <span class="material-symbols-outlined">add_circle</span> Programar Recolección
+        <button onclick="abrirModalProgramarRecoleccion()" class="w-full bg-white border border-gray-200 text-charcoal p-3 rounded-xl font-bold shadow-sm hover:bg-gray-50 flex justify-center items-center gap-2 transition">
+            <span class="material-symbols-outlined text-primary">add_circle</span> Programar Recolección
         </button>
 
         <div id="dash-dia">
@@ -22,7 +22,7 @@
                     <span class="material-symbols-outlined text-[18px]">filter_list</span> Filtros
                 </button>
 
-                <button onclick="descargarExcel()" class="flex-1 md:flex-none flex items-center justify-center gap-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition">
+                <button onclick="descargarExcel()" class="flex-1 md:flex-none flex items-center justify-center gap-1 bg-white border border-gray-200 text-black hover:bg-gray-50 px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition">
                     <span class="material-symbols-outlined text-[18px]">download</span> Excel
                 </button>
             </div>

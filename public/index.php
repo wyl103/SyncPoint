@@ -1,6 +1,19 @@
 <?php
 // public/index.php
 
+// Manejar peticiones a la API (/app/api/...)
+$requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$cleanUri = preg_replace('/^\/app_bless(\/public)?/', '', $requestUri);
+
+if (strpos($cleanUri, '/app/api/') === 0 || strpos($requestUri, '/app/api/') === 0) {
+    $targetPath = strpos($cleanUri, '/app/api/') === 0 ? $cleanUri : $requestUri;
+    $apiFile = __DIR__ . '/..' . $targetPath;
+    if (file_exists($apiFile) && !is_dir($apiFile)) {
+        require $apiFile;
+        exit;
+    }
+}
+
 // 1. Incluimos la cabecera (CSS, Tailwind, Head)
 require_once __DIR__ . '/../app/views/layout/head.php';
 

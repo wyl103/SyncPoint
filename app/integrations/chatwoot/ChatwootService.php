@@ -11,10 +11,16 @@ class ChatwootService {
     private $pdo;
 
     public function __construct() {
-        $env = @parse_ini_file(__DIR__ . '/../../../.env');
-        $this->baseUrl = trim(rtrim($env['CHATWOOT_BASE_URL'] ?? 'https://chat.oilbless.com', '/'));
-        $this->accountId = trim($env['CHATWOOT_ACCOUNT_ID'] ?? '1');
-        $this->apiToken = trim($env['CHATWOOT_API_TOKEN'] ?? '');
+        $envFile = __DIR__ . '/../../../.env';
+        $env = (file_exists($envFile) && is_readable($envFile)) ? @parse_ini_file($envFile) : [];
+        if (!is_array($env)) {
+            $env = [];
+        }
+
+        $this->baseUrl   = getenv('CHATWOOT_BASE_URL') ?: ($env['CHATWOOT_BASE_URL'] ?? 'https://chat.oilbless.com');
+        $this->baseUrl   = trim(rtrim($this->baseUrl, '/'));
+        $this->accountId = getenv('CHATWOOT_ACCOUNT_ID') ?: ($env['CHATWOOT_ACCOUNT_ID'] ?? '1');
+        $this->apiToken   = getenv('CHATWOOT_API_TOKEN') ?: ($env['CHATWOOT_API_TOKEN'] ?? '');
 
         $db = new Database();
         $this->pdo = $db->getConnection();
@@ -24,12 +30,14 @@ class ChatwootService {
      * Helper genérico para peticiones HTTP a la API de Chatwoot
      */
     private function makeRequest($endpoint, $method = 'GET', $data = null) {
-        $url = $this->baseUrl . $endpoint;
+        $sep = (strpos($endpoint, '?') === false) ? '?' : '&';
+        $url = $this->baseUrl . $endpoint . $sep . 'api_access_token=' . urlencode($this->apiToken);
         $ch = curl_init();
 
         $headers = [
             'Content-Type: application/json',
             'api_access_token: ' . $this->apiToken,
+            'api-access-token: ' . $this->apiToken,
             'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) SyncPoint/1.0'
         ];
 

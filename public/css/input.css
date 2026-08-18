@@ -202,6 +202,7 @@
 
 /* --- MODALES Y OVERLAYS DE FONDO (BLUR OSCURO Y PADINGS) --- */
 #modal-cliente,
+#modal-programar-recoleccion,
 #modal-sucursal-rapida,
 #modal-ruta-rapida {
   position: fixed !important;
@@ -218,25 +219,39 @@
   -webkit-backdrop-filter: blur(8px) !important;
 }
 
-#modal-cliente {
+#modal-cliente,
+#modal-programar-recoleccion {
   z-index: 50 !important;
 }
 
 #modal-sucursal-rapida,
-#modal-ruta-rapida {
+#modal-ruta-rapida,
+#modal-confirmar-frecuencia {
   z-index: 60 !important;
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 1.5rem !important;
   background-color: rgba(15, 23, 42, 0.75) !important;
   backdrop-filter: blur(12px) !important;
   -webkit-backdrop-filter: blur(12px) !important;
 }
 
 #modal-cliente.hidden-view,
+#modal-programar-recoleccion.hidden-view,
 #modal-sucursal-rapida.hidden-view,
-#modal-ruta-rapida.hidden-view {
+#modal-ruta-rapida.hidden-view,
+#modal-confirmar-frecuencia.hidden-view {
   display: none !important;
 }
 
-#modal-cliente > div {
+#modal-cliente > div,
+#modal-programar-recoleccion > div {
   width: 100% !important;
   max-width: 640px !important;
   background-color: #ffffff !important;
@@ -246,13 +261,61 @@
 }
 
 #modal-sucursal-rapida > div,
-#modal-ruta-rapida > div {
+#modal-ruta-rapida > div,
+#modal-confirmar-frecuencia > div {
   width: 100% !important;
-  max-width: 420px !important;
+  max-width: 440px !important;
   background-color: #ffffff !important;
   border-radius: 1.25rem !important;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45) !important;
   border: 1px solid rgba(229, 231, 235, 0.9) !important;
+}
+
+/* --- BOTONES DE OPCIÓN MODAL CONFIRMACIÓN --- */
+.btn-confirm-option-primary {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.875rem !important;
+  width: 100% !important;
+  padding: 1rem 1.25rem !important;
+  border-radius: 0.875rem !important;
+  background-color: #fefce8 !important;
+  border: 2px solid #facc14 !important;
+  color: #2d3436 !important;
+  text-align: left !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 2px 4px rgba(250, 204, 20, 0.15) !important;
+}
+
+.btn-confirm-option-primary:hover {
+  background-color: #fef08a !important;
+  border-color: #eab308 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 10px rgba(250, 204, 20, 0.25) !important;
+}
+
+.btn-confirm-option-secondary {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.875rem !important;
+  width: 100% !important;
+  padding: 1rem 1.25rem !important;
+  border-radius: 0.875rem !important;
+  background-color: #f9fafb !important;
+  border: 1.5px solid #e5e7eb !important;
+  color: #2d3436 !important;
+  text-align: left !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+.btn-confirm-option-secondary:hover {
+  background-color: #f3f4f6 !important;
+  border-color: #d1d5db !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08) !important;
 }
 
 /* --- DISEÑO DE BOTONES SISTEMA --- */

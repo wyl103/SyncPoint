@@ -96,15 +96,23 @@ async function renderDia(fechaIso, titulo, btnElement) {
                 const grupoContainer = document.getElementById(`grupo-${key}`);
 
                 grupo.recolecciones.forEach(rec => {
-                    let colorEstado = rec.estado_recoleccion === 'pendiente' ? 'bg-yellow-50 text-yellow-800 border-yellow-200' : 
-                                     (rec.estado_recoleccion === 'completada' ? 'bg-green-50 text-green-800 border-green-200' : 'bg-gray-50 text-gray-800 border-gray-200');
+                    let esTentativa = rec.es_tentativa || rec.estado_recoleccion === 'tentativa';
+                    let colorEstado = esTentativa ? 'bg-blue-50 text-blue-800 border-blue-200' :
+                                     (rec.estado_recoleccion === 'completada' ? 'bg-green-50 text-green-800 border-green-200' : 
+                                     (rec.estado_recoleccion === 'cancelada' ? 'bg-red-50 text-red-800 border-red-200' : 'bg-yellow-50 text-yellow-800 border-yellow-200'));
+
+                    let estadoTexto = esTentativa ? 'TENTATIVA' : (rec.estado_recoleccion || 'AGENDADO');
 
                     grupoContainer.innerHTML += `
                         <div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3 hover:border-primary transition">
-                            <div class="flex-1 cursor-pointer" onclick="verDetallesRecoleccion(${rec.id})">
-                                <h3 class="font-bold text-charcoal text-lg">${rec.cliente_nombre}</h3>
+                            <div class="flex-1 cursor-pointer" onclick="verDetallesRecoleccion(${rec.id || 'null'})">
+                                <div class="flex items-center gap-2">
+                                    <h3 class="font-bold text-charcoal text-lg">${rec.cliente_nombre}</h3>
+                                    ${rec.frecuencia_nombre ? `<span class="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-bold">${rec.frecuencia_nombre}</span>` : ''}
+                                </div>
                                 <div class="flex items-center gap-3 mt-1">
                                     <p class="text-xs font-semibold text-gray-500 flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">call</span>${rec.telefono_whatsapp || 'Sin número'}</p>
+                                    ${rec.fecha_base ? `<p class="text-xs text-gray-400 font-semibold">Base: ${rec.fecha_base}</p>` : '<p class="text-xs text-amber-600 font-semibold">Sin fecha base</p>'}
                                 </div>
                             </div>
                             <div class="flex items-center gap-2 justify-between border-t md:border-t-0 border-gray-100 pt-3 md:pt-0">
@@ -112,8 +120,13 @@ async function renderDia(fechaIso, titulo, btnElement) {
                                     <span class="material-symbols-outlined text-[16px] text-primary">route</span>Ruta ${rec.ruta_nombre || 'N/A'}
                                 </span>
                                 <span class="px-2 py-1 border text-[10px] font-bold rounded uppercase ${colorEstado}">
-                                    ${rec.estado_recoleccion}
+                                    ${estadoTexto}
                                 </span>
+                                ${esTentativa ? `
+                                <button onclick="agendarEventoTentativo(${rec.cliente_id}, ${rec.ruta_id || 'null'}, '${rec.fecha_programada}')" class="px-2.5 py-1 rounded-lg bg-primary hover:bg-yellow-400 text-charcoal font-bold text-xs flex items-center gap-1 transition shadow-2xs" title="Convertir en evento agendado">
+                                    <span class="material-symbols-outlined text-[15px]">event_available</span>
+                                    <span>Agendar</span>
+                                </button>` : ''}
                                 ${rec.cliente_id ? `
                                 <button onclick="abrirModalChatwoot(${rec.cliente_id}, '${(rec.cliente_nombre || '').replace(/'/g, "\\'")}')" class="p-1.5 rounded-lg bg-primary/20 hover:bg-yellow-400 text-charcoal transition" title="Abrir Chat de WhatsApp">
                                     <span class="material-symbols-outlined text-[18px]">forum</span>
@@ -288,3 +301,319 @@ function descargarExcel() {
     link.click();
     document.body.removeChild(link);
 }
+
+async function agendarEventoTentativo(clienteId, rutaId, fechaProgramada) {
+    try {
+        const response = await fetch(`${API_BASE}/core/eventos.php`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                cliente_id: clienteId,
+                ruta_id: rutaId,
+                fecha_programada: fechaProgramada,
+                estado: 'agendado',
+                tipo: 'programada'
+            })
+        });
+
+        const data = await response.json();
+        if (response.ok && data.success) {
+            recargarDiaActual();
+        } else {
+            alert(data.message || "No se pudo agendar el evento.");
+        }
+    } catch (error) {
+        console.error("Error agendando evento tentativo:", error);
+        alert("Error conectando con el servidor para agendar el evento.");
+    }
+}
+
+// ----------------------------------------------------
+// Lógica de Modal Programar Recolección
+// ----------------------------------------------------
+let clienteSeleccionadoProg = null;
+let timerBusquedaClienteProg = null;
+
+async function abrirModalProgramarRecoleccion() {
+    const modal = document.getElementById('modal-programar-recoleccion');
+    const form = document.getElementById('form-programar-recoleccion');
+    if (!modal) return;
+
+    if (form) form.reset();
+    limpiarClienteSeleccionadoProg();
+
+    // Establecer fecha por defecto (hoy)
+    const fechaInput = document.getElementById('form-prog-fecha');
+    if (fechaInput) {
+        fechaInput.value = fechaActualIso || formatLocalIso(new Date());
+    }
+
+    // Cargar sucursales
+    await cargarSucursalesModalProg();
+    
+    // Resetear selector de ruta (disabled)
+    resetRutaModalProg();
+
+    modal.classList.remove('hidden-view');
+}
+
+function cerrarModalProgramarRecoleccion() {
+    const modal = document.getElementById('modal-programar-recoleccion');
+    if (modal) modal.classList.add('hidden-view');
+}
+
+async function cargarSucursalesModalProg() {
+    const selectSuc = document.getElementById('form-prog-sucursal');
+    if (!selectSuc) return;
+
+    selectSuc.innerHTML = `<option value="">-- Seleccionar sucursal --</option>`;
+
+    try {
+        const res = await fetch(`${API_BASE}/core/sucursales.php?limit=100`);
+        const result = await res.json();
+        if (result.success && result.data) {
+            result.data.forEach(suc => {
+                selectSuc.innerHTML += `<option value="${suc.id}">${suc.nombre}</option>`;
+            });
+        }
+    } catch (err) {
+        console.error("Error cargando sucursales para modal prog:", err);
+    }
+}
+
+function resetRutaModalProg() {
+    const selectRuta = document.getElementById('form-prog-ruta');
+    if (!selectRuta) return;
+
+    selectRuta.disabled = true;
+    selectRuta.className = 'w-full p-3 rounded-xl border border-gray-200 bg-gray-100 text-gray-400 text-sm font-semibold outline-none transition cursor-not-allowed';
+    selectRuta.innerHTML = `<option value="">Selecciona primero una sucursal...</option>`;
+}
+
+async function alCambiarSucursalModalProg() {
+    const sucursalId = document.getElementById('form-prog-sucursal')?.value;
+    const selectRuta = document.getElementById('form-prog-ruta');
+    if (!selectRuta) return;
+
+    if (!sucursalId) {
+        resetRutaModalProg();
+        buscarClienteModalProg();
+        return;
+    }
+
+    selectRuta.disabled = false;
+    selectRuta.className = 'w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-charcoal outline-none focus:border-primary focus:bg-white transition cursor-pointer';
+    selectRuta.innerHTML = `<option value="">Todas las rutas de esta sucursal</option>`;
+
+    try {
+        const res = await fetch(`${API_BASE}/core/rutas.php?sucursal_id=${encodeURIComponent(sucursalId)}&limit=100`);
+        const result = await res.json();
+        if (result.success && result.data) {
+            result.data.forEach(ruta => {
+                selectRuta.innerHTML += `<option value="${ruta.id}">${ruta.nombre}${ruta.ciudad ? ` (${ruta.ciudad})` : ''}</option>`;
+            });
+        }
+    } catch (err) {
+        console.error("Error cargando rutas para sucursal:", err);
+    }
+
+    buscarClienteModalProg();
+}
+
+function alCambiarRutaModalProg() {
+    buscarClienteModalProg();
+}
+
+function buscarClienteModalProg() {
+    clearTimeout(timerBusquedaClienteProg);
+    timerBusquedaClienteProg = setTimeout(async () => {
+        const dropdown = document.getElementById('dropdown-prog-clientes-options');
+        const query = document.getElementById('form-prog-cliente-search')?.value.trim() || '';
+        const sucursalId = document.getElementById('form-prog-sucursal')?.value || '';
+        const rutaId = document.getElementById('form-prog-ruta')?.value || '';
+
+        if (!dropdown) return;
+
+        dropdown.innerHTML = `<div class="p-3 text-center text-gray-400 font-semibold"><div class="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mx-auto mb-1"></div> Buscando clientes...</div>`;
+        dropdown.classList.remove('hidden');
+
+        try {
+            let url = `${API_BASE}/core/clientes.php?limit=20&q=${encodeURIComponent(query)}`;
+            if (sucursalId) url += `&sucursal_id=${encodeURIComponent(sucursalId)}`;
+            if (rutaId) url += `&ruta_id=${encodeURIComponent(rutaId)}`;
+
+            const res = await fetch(url);
+            const result = await res.json();
+
+            if (result.success && result.data && result.data.length > 0) {
+                dropdown.innerHTML = '';
+                result.data.forEach(c => {
+                    const item = document.createElement('div');
+                    item.className = 'p-3 hover:bg-primary/20 cursor-pointer transition border-b border-gray-100 last:border-0 flex justify-between items-center';
+                    item.innerHTML = `
+                        <div>
+                            <p class="font-bold text-charcoal text-xs">${c.nombre}</p>
+                            <p class="text-[10px] text-gray-500">${c.telefono_whatsapp || 'Sin tel'} | Ruta: ${c.ruta_nombre || 'N/A'}</p>
+                        </div>
+                        <span class="material-symbols-outlined text-gray-400 text-[16px]">chevron_right</span>
+                    `;
+                    item.onclick = (e) => {
+                        e.stopPropagation();
+                        seleccionarClienteModalProg(c);
+                    };
+                    dropdown.appendChild(item);
+                });
+            } else {
+                dropdown.innerHTML = `<div class="p-3 text-center text-gray-400 font-semibold">No se encontraron clientes</div>`;
+            }
+        } catch (err) {
+            console.error("Error buscando clientes:", err);
+            dropdown.innerHTML = `<div class="p-3 text-center text-red-500 font-semibold">Error al buscar clientes</div>`;
+        }
+    }, 250);
+}
+
+function seleccionarClienteModalProg(cliente) {
+    clienteSeleccionadoProg = cliente;
+    document.getElementById('form-prog-cliente-id').value = cliente.id;
+    document.getElementById('dropdown-prog-clientes-options')?.classList.add('hidden');
+
+    const searchInput = document.getElementById('form-prog-cliente-search');
+    const infoBox = document.getElementById('cliente-seleccionado-info');
+    const lblNombre = document.getElementById('lbl-cliente-sel-nombre');
+    const lblDetalle = document.getElementById('lbl-cliente-sel-detalle');
+
+    if (searchInput) searchInput.classList.add('hidden');
+    if (infoBox) infoBox.classList.remove('hidden');
+
+    if (lblNombre) lblNombre.innerText = cliente.nombre;
+    if (lblDetalle) {
+        lblDetalle.innerText = `Tel: ${cliente.telefono_whatsapp || 'N/A'} | Ruta: ${cliente.ruta_nombre || 'Sin asignación'} | Sucursal: ${cliente.sucursal_nombre || 'N/A'}`;
+    }
+}
+
+function limpiarClienteSeleccionadoProg() {
+    clienteSeleccionadoProg = null;
+    const clienteIdInput = document.getElementById('form-prog-cliente-id');
+    const searchInput = document.getElementById('form-prog-cliente-search');
+    const infoBox = document.getElementById('cliente-seleccionado-info');
+    const dropdown = document.getElementById('dropdown-prog-clientes-options');
+
+    if (clienteIdInput) clienteIdInput.value = '';
+    if (searchInput) {
+        searchInput.value = '';
+        searchInput.classList.remove('hidden');
+    }
+    if (infoBox) infoBox.classList.add('hidden');
+    if (dropdown) dropdown.classList.add('hidden');
+}
+
+// Cerrar dropdown de clientes al hacer clic fuera
+document.addEventListener('click', (e) => {
+    const inputSearch = document.getElementById('form-prog-cliente-search');
+    const dropdown = document.getElementById('dropdown-prog-clientes-options');
+    if (dropdown && inputSearch && !inputSearch.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.add('hidden');
+    }
+});
+
+function solicitarConfirmacionRecoleccion(event) {
+    event.preventDefault();
+
+    const clienteId = document.getElementById('form-prog-cliente-id')?.value;
+    const fechaProg = document.getElementById('form-prog-fecha')?.value;
+
+    if (!clienteId || !clienteSeleccionadoProg) {
+        alert("Por favor selecciona un cliente de la lista.");
+        return;
+    }
+
+    if (!fechaProg) {
+        alert("Por favor selecciona una fecha válida para la recolección.");
+        return;
+    }
+
+    // Abrir modal de confirmación de frecuencia
+    const modalConfirm = document.getElementById('modal-confirmar-frecuencia');
+    if (modalConfirm) modalConfirm.classList.remove('hidden-view');
+}
+
+function cerrarModalConfirmarFrecuencia() {
+    const modalConfirm = document.getElementById('modal-confirmar-frecuencia');
+    if (modalConfirm) modalConfirm.classList.add('hidden-view');
+}
+
+async function procesarProgramacionRecoleccion(tipoCambio) {
+    const clienteId = document.getElementById('form-prog-cliente-id')?.value;
+    const fechaProg = document.getElementById('form-prog-fecha')?.value;
+    const btnAplicar = document.getElementById('btn-aplicar-programacion');
+
+    if (!clienteId || !fechaProg) return;
+
+    cerrarModalConfirmarFrecuencia();
+    if (btnAplicar) { btnAplicar.disabled = true; btnAplicar.innerText = "Procesando..."; }
+
+    try {
+        // 1. Si elige "todas", actualizamos la fecha_base del cliente
+        if (tipoCambio === 'todas') {
+            const resCliente = await fetch(`${API_BASE}/core/clientes.php?id=${clienteId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: clienteId,
+                    nombre: clienteSeleccionadoProg.nombre,
+                    telefono_whatsapp: clienteSeleccionadoProg.telefono_whatsapp,
+                    fecha_base: fechaProg,
+                    estado: 'agendado'
+                })
+            });
+            const dataCliente = await resCliente.json();
+            if (!dataCliente.success) {
+                console.warn("Advertencia actualizando cliente:", dataCliente.message);
+            }
+        }
+
+        // 2. Crear evento programado en recolecciones/eventos
+        const resEvento = await fetch(`${API_BASE}/core/eventos.php`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                cliente_id: parseInt(clienteId),
+                ruta_id: clienteSeleccionadoProg.ruta_id || null,
+                fecha_programada: fechaProg,
+                estado: 'agendado',
+                tipo: 'programada'
+            })
+        });
+
+        const dataEvento = await resEvento.json();
+
+        if (dataEvento.success || resEvento.ok) {
+            cerrarModalProgramarRecoleccion();
+            recargarDiaActual();
+        } else {
+            alert(dataEvento.message || "Error al programar la recolección.");
+        }
+    } catch (err) {
+        console.error("Error al programar recolección:", err);
+        alert("Error de conexión al procesar la recolección.");
+    } finally {
+        if (btnAplicar) {
+            btnAplicar.disabled = false;
+            btnAplicar.innerHTML = `<span class="material-symbols-outlined text-[18px]">check_circle</span> Aplicar`;
+        }
+    }
+}
+
+// Exponer funciones globales
+window.abrirModalProgramarRecoleccion = abrirModalProgramarRecoleccion;
+window.cerrarModalProgramarRecoleccion = cerrarModalProgramarRecoleccion;
+window.alCambiarSucursalModalProg = alCambiarSucursalModalProg;
+window.alCambiarRutaModalProg = alCambiarRutaModalProg;
+window.buscarClienteModalProg = buscarClienteModalProg;
+window.seleccionarClienteModalProg = seleccionarClienteModalProg;
+window.limpiarClienteSeleccionadoProg = limpiarClienteSeleccionadoProg;
+window.solicitarConfirmacionRecoleccion = solicitarConfirmacionRecoleccion;
+window.cerrarModalConfirmarFrecuencia = cerrarModalConfirmarFrecuencia;
+window.procesarProgramacionRecoleccion = procesarProgramacionRecoleccion;
+

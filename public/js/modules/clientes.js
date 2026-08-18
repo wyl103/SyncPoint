@@ -79,11 +79,14 @@ async function cargarFiltrosDinamicos() {
 
         // Cargar estados desde el endpoint de sistema o estáticos
         const selectEstado = document.getElementById('filtro-estado');
-        if (selectEstado && selectEstado.options.length <= 1) {
+        if (selectEstado) {
             selectEstado.innerHTML = `
                 <option value="todos">Todos los estados</option>
+                <option value="agendado">Agendado</option>
+                <option value="tentativa">Tentativa</option>
                 <option value="pendiente">Pendiente</option>
                 <option value="completada">Completada</option>
+                <option value="cancelada">Cancelada</option>
             `;
         }
 

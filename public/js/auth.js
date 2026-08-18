@@ -2,9 +2,15 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const viewLogin = document.getElementById('view-login');
     const viewApp = document.getElementById('view-app');
+    const viewRegisterFirst = document.getElementById('view-register-first');
     const loadingScreen = document.getElementById('loading-screen');
     const loginForm = document.getElementById('login-form');
     const loginError = document.getElementById('login-error');
+    const loginSuccess = document.getElementById('login-success');
+    
+    const registerFirstForm = document.getElementById('register-first-form');
+    const registerFirstError = document.getElementById('register-first-error');
+
     const btnLogout = document.getElementById('btn-logout');
     const btnLogoutMobile = document.getElementById('btn-logout-mobile');
     
@@ -21,6 +27,12 @@ document.addEventListener('DOMContentLoaded', () => {
         showLogin();
     }
 
+    function mostrarErrorRegistro(mensaje) {
+        if (!registerFirstError) return;
+        registerFirstError.innerText = mensaje || "Ocurrió un problema al registrar el usuario.";
+        registerFirstError.classList.remove('hidden-view');
+    }
+
     async function checkAuthStatus() {
         try {
             const response = await fetch(`${API_BASE}/auth/check_session.php`);
@@ -31,6 +43,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const data = await response.json();
+
+            // Si NO existen usuarios en la base de datos, mostramos el formulario de registro inicial
+            if (data && data.has_users === false) {
+                showRegisterFirst();
+                return;
+            }
 
             if (data && data.authenticated) {
                 showApp(data.user);
@@ -47,10 +65,47 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Manejo de envío del formulario de REGISTRO del primer usuario
+    if (registerFirstForm) {
+        registerFirstForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (registerFirstError) registerFirstError.classList.add('hidden-view');
+            
+            const nombre = document.getElementById('reg-nombre').value;
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/register_first_user.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    // Pre-llenar el correo en el formulario de login y mostrar la pantalla de login
+                    const loginEmailInput = document.getElementById('email');
+                    if (loginEmailInput) loginEmailInput.value = email;
+
+                    showLogin(data.message);
+                } else {
+                    mostrarErrorRegistro(data.message || "Error al crear el usuario.");
+                }
+            } catch (error) {
+                console.error("Error al registrar primer usuario:", error);
+                mostrarErrorRegistro("No se pudo conectar con el servidor para registrar el usuario.");
+            }
+        });
+    }
+
+    // Manejo de envío del formulario de LOGIN
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             if (loginError) loginError.classList.add('hidden-view');
+            if (loginSuccess) loginSuccess.classList.add('hidden-view');
             
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
@@ -108,6 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showApp(user) {
         if (viewLogin) viewLogin.classList.add('hidden-view');
+        if (viewRegisterFirst) viewRegisterFirst.classList.add('hidden-view');
         if (viewApp) viewApp.classList.remove('hidden-view');
 
         const userDisplay = document.getElementById('user-name-display');
@@ -123,12 +179,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function showLogin() {
+    function showLogin(mensajeExito = null) {
         if (viewApp) viewApp.classList.add('hidden-view');
+        if (viewRegisterFirst) viewRegisterFirst.classList.add('hidden-view');
         if (viewLogin) viewLogin.classList.remove('hidden-view');
         
+        if (mensajeExito && loginSuccess) {
+            loginSuccess.innerText = mensajeExito;
+            loginSuccess.classList.remove('hidden-view');
+        }
+
         const targetUrl = (BASE_PATH || '') + '/login';
         if (window.location.pathname !== targetUrl && targetUrl !== '/login') {
+            window.history.pushState({}, '', targetUrl);
+        }
+    }
+
+    function showRegisterFirst() {
+        if (viewApp) viewApp.classList.add('hidden-view');
+        if (viewLogin) viewLogin.classList.add('hidden-view');
+        if (viewRegisterFirst) viewRegisterFirst.classList.remove('hidden-view');
+
+        const targetUrl = (BASE_PATH || '') + '/setup';
+        if (window.location.pathname !== targetUrl && targetUrl !== '/setup') {
             window.history.pushState({}, '', targetUrl);
         }
     }

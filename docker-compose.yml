@@ -1,0 +1,25 @@
+services:
+  web:
+    build: .
+    container_name: SyncPoint
+    ports:
+      - "1019:80"
+    volumes:
+      - .:/var/www/html
+    environment:
+      DB_HOST: crionyx_v2_db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASS: secretpassword
+      DB_NAME: crionyx
+      DB_SCHEMA: SyncPoint
+      CHATWOOT_BASE_URL: https://chat.oilbless.com
+      CHATWOOT_ACCOUNT_ID: "1"
+      CHATWOOT_API_TOKEN: "VN6h3xLySXfwV68kewa9szYc"
+    restart: unless-stopped
+    networks:
+      - red-proyectos
+
+networks:
+  red-proyectos:
+    external: true

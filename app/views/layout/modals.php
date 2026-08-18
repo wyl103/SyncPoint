@@ -269,3 +269,128 @@
         </form>
     </div>
 </div>
+
+<!-- MODAL PROGRAMAR RECOLECCIÓN -->
+<div id="modal-programar-recoleccion" onclick="if(event.target === this) cerrarModalProgramarRecoleccion()" class="hidden-view fixed inset-0 z-50 bg-charcoal/40 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border border-gray-200 flex flex-col max-h-[90vh]">
+        <!-- Header -->
+        <div class="px-6 py-4 bg-white border-b border-gray-100 flex justify-between items-center shrink-0">
+            <h3 class="font-bold text-charcoal text-lg flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">event_available</span>
+                <span>Programar Recolección</span>
+            </h3>
+            <button onclick="cerrarModalProgramarRecoleccion()" class="p-1.5 rounded-full text-gray-400 hover:text-charcoal hover:bg-gray-100 transition">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <!-- Form Body -->
+        <form id="form-programar-recoleccion" onsubmit="solicitarConfirmacionRecoleccion(event)" class="p-6 overflow-y-auto space-y-4 flex-1">
+            <input type="hidden" id="form-prog-cliente-id" value="">
+
+            <!-- Sucursal -->
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1.5 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[16px] text-gray-400">store</span> Sucursal
+                </label>
+                <select id="form-prog-sucursal" onchange="alCambiarSucursalModalProg()" class="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-charcoal outline-none focus:border-primary focus:bg-white transition">
+                    <option value="">-- Seleccionar sucursal --</option>
+                </select>
+            </div>
+
+            <!-- Ruta (Solo activa si se selecciona Sucursal) -->
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1.5 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[16px] text-primary">route</span> Ruta / Zona
+                </label>
+                <select id="form-prog-ruta" disabled onchange="alCambiarRutaModalProg()" class="w-full p-3 rounded-xl border border-gray-200 bg-gray-100 text-gray-400 text-sm font-semibold outline-none transition cursor-not-allowed">
+                    <option value="">Selecciona primero una sucursal...</option>
+                </select>
+            </div>
+
+            <!-- Buscar / Seleccionar Cliente -->
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1.5 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[16px] text-gray-400">person_search</span> Cliente <span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                    <input type="text" id="form-prog-cliente-search" placeholder="Escribe el nombre o teléfono del cliente..." autocomplete="off" oninput="buscarClienteModalProg()" onfocus="buscarClienteModalProg()" class="w-full p-3 pr-8 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-charcoal outline-none focus:border-primary focus:bg-white transition">
+                    <span class="material-symbols-outlined absolute right-3 top-3.5 text-gray-400 pointer-events-none text-[18px]">search</span>
+                    
+                    <div id="dropdown-prog-clientes-options" class="hidden absolute z-30 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto text-xs font-semibold text-gray-700"></div>
+                </div>
+                <div id="cliente-seleccionado-info" class="hidden mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between">
+                    <div>
+                        <p id="lbl-cliente-sel-nombre" class="font-bold text-emerald-900 text-xs"></p>
+                        <p id="lbl-cliente-sel-detalle" class="text-[10px] text-emerald-700 font-semibold mt-0.5"></p>
+                    </div>
+                    <button type="button" onclick="limpiarClienteSeleccionadoProg()" class="text-emerald-700 hover:text-emerald-900 text-xs font-bold underline">Cambiar</button>
+                </div>
+            </div>
+
+            <!-- Fecha de Recolección -->
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1.5 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[16px] text-primary">calendar_month</span> Fecha de Recolección <span class="text-red-500">*</span>
+                </label>
+                <input type="date" id="form-prog-fecha" required class="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-charcoal outline-none focus:border-primary focus:bg-white transition">
+            </div>
+
+            <!-- Footer con Botones -->
+            <div class="pt-4 border-t border-gray-100 flex items-center justify-end gap-3 shrink-0">
+                <button type="button" onclick="cerrarModalProgramarRecoleccion()" class="btn-secondary-main">
+                    Cancelar
+                </button>
+                <button type="submit" id="btn-aplicar-programacion" class="btn-primary-main">
+                    <span class="material-symbols-outlined text-[18px]">check_circle</span> Aplicar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- SUB-MODAL CONFIRMACIÓN DE FRECUENCIA / EVENTO PUNTUAL -->
+<div id="modal-confirmar-frecuencia" onclick="if(event.target === this) cerrarModalConfirmarFrecuencia()" class="hidden-view fixed inset-0 z-50 bg-charcoal/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-gray-200 p-6 space-y-5">
+        <div class="flex items-start gap-3">
+            <div class="bg-amber-100 text-amber-700 p-3 rounded-full shrink-0">
+                <span class="material-symbols-outlined text-2xl">help_outline</span>
+            </div>
+            <div>
+                <h4 class="font-bold text-charcoal text-base leading-snug">¿Cómo deseas aplicar esta recolección?</h4>
+                <p class="text-xs text-gray-600 font-medium mt-1 leading-relaxed">
+                    ¿Desea que cambiemos todas las recolecciones para estas fechas según la frecuencia del cliente o es por solo esta vez?
+                </p>
+            </div>
+        </div>
+
+        <div class="space-y-3 pt-2">
+            <button type="button" onclick="procesarProgramacionRecoleccion('todas')" class="btn-confirm-option-primary">
+                <div class="bg-yellow-400/30 text-amber-900 p-2.5 rounded-xl shrink-0 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-2xl">update</span>
+                </div>
+                <div>
+                    <p class="font-extrabold text-charcoal text-sm">Cambiar todas las recolecciones</p>
+                    <p class="text-xs font-medium text-gray-600 mt-0.5 leading-snug">Actualiza la fecha base del cliente para recalcular la frecuencia periódica.</p>
+                </div>
+            </button>
+
+            <button type="button" onclick="procesarProgramacionRecoleccion('esta_vez')" class="btn-confirm-option-secondary">
+                <div class="bg-gray-200 text-gray-700 p-2.5 rounded-xl shrink-0 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-2xl">event</span>
+                </div>
+                <div>
+                    <p class="font-extrabold text-charcoal text-sm">Solo por esta vez</p>
+                    <p class="text-xs font-medium text-gray-600 mt-0.5 leading-snug">Crea únicamente un evento de recolección puntual para esta fecha.</p>
+                </div>
+            </button>
+        </div>
+
+        <div class="flex justify-end pt-1 border-t border-gray-100">
+            <button type="button" onclick="cerrarModalConfirmarFrecuencia()" class="text-xs font-bold text-gray-500 hover:text-charcoal px-3 py-1.5 rounded-lg hover:bg-gray-100 transition">
+                Cancelar
+            </button>
+        </div>
+    </div>
+</div>
+

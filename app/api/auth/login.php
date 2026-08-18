@@ -33,7 +33,7 @@ try {
     $db = new Database();
     $pdo = $db->getConnection();
 
-    $stmt = $pdo->prepare("SELECT id, nombre, clave FROM usuarios WHERE correo = ?");
+    $stmt = $pdo->prepare("SELECT id, nombre, clave FROM usuarios WHERE LOWER(TRIM(correo)) = LOWER(TRIM(?))");
     $stmt->execute([$correo]);
     $usuario = $stmt->fetch();
 
@@ -59,9 +59,9 @@ try {
 } catch (PDOException $e) {
     error_log("Error de BD en login: " . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Ocurrió un problema en el servidor. Inténtelo más tarde.']);
+    echo json_encode(['success' => false, 'message' => 'Error de Base de Datos: ' . $e->getMessage()]);
 } catch (Exception $e) {
     error_log("Error en login: " . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Ocurrió un problema en el servidor. Inténtelo más tarde.']);
+    echo json_encode(['success' => false, 'message' => 'Error en Servidor: ' . $e->getMessage()]);
 }
