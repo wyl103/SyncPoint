@@ -336,7 +336,8 @@ class Evento {
                         FROM clientes c
                         LEFT JOIN rutas r ON c.ruta_id = r.id
                         LEFT JOIN sucursales s ON r.fk_sucursal = s.id
-                        LEFT JOIN frecuencias f ON c.frecuencia_id = f.id";
+                        LEFT JOIN frecuencias f ON c.frecuencia_id = f.id
+                        WHERE c.fecha_base IS NOT NULL AND TRIM(c.fecha_base::text) != ''";
         
         $stmtC = $this->pdo->query($sqlClientes);
         $todosClientes = $stmtC->fetchAll();
@@ -351,23 +352,16 @@ class Evento {
             }
 
             $diasFrecuencia = (int)($c['frecuencia_dias'] ?? 0);
-            if ($diasFrecuencia <= 0) {
+            if ($diasFrecuencia <= 0 || empty($c['fecha_base'])) {
                 continue;
             }
 
             $esCiclo = false;
+            $baseTs = strtotime($c['fecha_base']);
+            $diffDays = (int)round(($targetTs - $baseTs) / 86400);
 
-            if (!empty($c['fecha_base'])) {
-                $baseTs = strtotime($c['fecha_base']);
-                $diffDays = (int)round(($targetTs - $baseTs) / 86400);
-                if ($diffDays >= 0 && ($diffDays % $diasFrecuencia === 0)) {
-                    $esCiclo = true;
-                }
-            } else {
-                $daysEpoch = (int)floor($targetTs / 86400);
-                if ($daysEpoch % $diasFrecuencia === 0) {
-                    $esCiclo = true;
-                }
+            if ($diffDays >= 0 && ($diffDays % $diasFrecuencia === 0)) {
+                $esCiclo = true;
             }
 
             if ($esCiclo) {
@@ -444,7 +438,8 @@ class Evento {
 
         $sqlC = "SELECT c.id, c.fecha_base, f.dias AS frecuencia_dias 
                  FROM clientes c 
-                 LEFT JOIN frecuencias f ON c.frecuencia_id = f.id";
+                 LEFT JOIN frecuencias f ON c.frecuencia_id = f.id
+                 WHERE c.fecha_base IS NOT NULL AND TRIM(c.fecha_base::text) != ''";
         $stmtC = $this->pdo->query($sqlC);
         $clientes = $stmtC->fetchAll();
 
@@ -462,19 +457,12 @@ class Evento {
                 }
 
                 $diasFrecuencia = (int)($c['frecuencia_dias'] ?? 0);
-                if ($diasFrecuencia <= 0) continue;
+                if ($diasFrecuencia <= 0 || empty($c['fecha_base'])) continue;
 
-                if (!empty($c['fecha_base'])) {
-                    $baseTs = strtotime($c['fecha_base']);
-                    $diffDays = (int)round(($ts - $baseTs) / 86400);
-                    if ($diffDays >= 0 && ($diffDays % $diasFrecuencia === 0)) {
-                        $conteoTent++;
-                    }
-                } else {
-                    $daysEpoch = (int)floor($ts / 86400);
-                    if ($daysEpoch % $diasFrecuencia === 0) {
-                        $conteoTent++;
-                    }
+                $baseTs = strtotime($c['fecha_base']);
+                $diffDays = (int)round(($ts - $baseTs) / 86400);
+                if ($diffDays >= 0 && ($diffDays % $diasFrecuencia === 0)) {
+                    $conteoTent++;
                 }
             }
 
