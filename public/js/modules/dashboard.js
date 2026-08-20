@@ -354,7 +354,8 @@ async function agendarEventoTentativo(clienteId, rutaId, fechaProgramada) {
                 ruta_id: rutaId,
                 fecha_programada: fechaProgramada,
                 estado: 'agendado',
-                tipo: 'programada'
+                tipo: 'programada',
+                evento_origin: 'user'
             })
         });
 
@@ -628,7 +629,7 @@ async function procesarProgramacionRecoleccion(tipoCambio) {
                     fecha_programada: fechaProg,
                     estado: 'programado',
                     tipo: 'unica',
-                    evento_origin: null
+                    evento_origin: 'user'
                 })
             });
 

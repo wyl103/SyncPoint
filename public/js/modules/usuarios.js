@@ -29,6 +29,8 @@ function cambiarSubTabUsuario(subTab) {
 
         if (btnProgramacion) btnProgramacion.className = activeTextClass;
         if (btnDirectorio) btnDirectorio.className = inactiveTextClass;
+
+        cargarConfiguracionProgramacion();
     }
 }
 
@@ -331,6 +333,38 @@ async function ejecutarProgramacionGlobalEventos() {
     }
 }
 
+async function cargarConfiguracionProgramacion() {
+    const toggle = document.getElementById('toggle-usar-dia-ruta');
+    if (!toggle) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/sistema/configuracion.php`);
+        const result = await response.json();
+        if (result.success && result.data) {
+            toggle.checked = !!result.data.programacion_usar_dia_ruta;
+        }
+    } catch (err) {
+        console.error("Error cargando configuración de programación:", err);
+    }
+}
+
+async function guardarConfiguracionProgramacion(activo) {
+    try {
+        const response = await fetch(`${API_BASE}/sistema/configuracion.php`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ programacion_usar_dia_ruta: activo })
+        });
+        const result = await response.json();
+        if (!result.success) {
+            alert(result.message || "Error al actualizar la configuración.");
+        }
+    } catch (err) {
+        console.error("Error guardando configuración de programación:", err);
+        alert("Error de conexión al actualizar la configuración.");
+    }
+}
+
 // Exponer en objeto Window
 window.cambiarSubTabUsuario = cambiarSubTabUsuario;
 window.cargarUsuarios = cargarUsuarios;
@@ -341,3 +375,5 @@ window.cerrarModalCrearUsuario = cerrarModalCrearUsuario;
 window.guardarUsuario = guardarUsuario;
 window.eliminarUsuario = eliminarUsuario;
 window.ejecutarProgramacionGlobalEventos = ejecutarProgramacionGlobalEventos;
+window.cargarConfiguracionProgramacion = cargarConfiguracionProgramacion;
+window.guardarConfiguracionProgramacion = guardarConfiguracionProgramacion;

@@ -1,6 +1,7 @@
 <?php
 // app/services/eventos/EventCalculatorService.php
 require_once __DIR__ . '/../../services/Database.php';
+require_once __DIR__ . '/../AppConfig.php';
 
 class EventCalculatorService {
     private $pdo;
@@ -277,14 +278,16 @@ class EventCalculatorService {
     public function programarEventosGlobales($diasHorizonte = 30) {
         $diasHorizonte = max(1, (int)$diasHorizonte);
 
-        // 1. Obtener la fecha más lejana agendada
+        $hoy = date('Y-m-d');
+        $fechaDesde = $hoy;
+
+        // Obtener la fecha más lejana agendada para asegurar cubrir el horizonte deseado
         $sqlMax = "SELECT MAX(fecha_programada)::text FROM eventos WHERE fecha_programada >= CURRENT_DATE";
         $stmtMax = $this->pdo->query($sqlMax);
         $maxFecha = $stmtMax->fetchColumn();
 
-        $hoy = date('Y-m-d');
-        $fechaDesde = (!empty($maxFecha) && $maxFecha >= $hoy) ? $maxFecha : $hoy;
-        $fechaHasta = date('Y-m-d', strtotime("{$fechaDesde} + {$diasHorizonte} days"));
+        $baseHasta = (!empty($maxFecha) && $maxFecha >= $hoy) ? $maxFecha : $hoy;
+        $fechaHasta = date('Y-m-d', strtotime("{$baseHasta} + {$diasHorizonte} days"));
 
         // 2. Consultar únicamente clientes activos que tengan una fecha_base configurada y una frecuencia válida
         $sqlClientes = "SELECT c.id, c.nombre, c.fecha_base, c.ruta_id, c.frecuencia_id, f.dias, r.nombre AS ruta_nombre 
@@ -296,6 +299,8 @@ class EventCalculatorService {
                           AND TRIM(c.fecha_base::text) != ''";
         $stmtC = $this->pdo->query($sqlClientes);
         $clientes = $stmtC->fetchAll();
+
+        $usarDiaRuta = (bool)AppConfig::get('programacion_usar_dia_ruta', false);
 
         $totalEventosCreados = 0;
         $totalEventosExistentes = 0;
@@ -322,16 +327,16 @@ class EventCalculatorService {
                 $tsActual = $tsBase;
                 if ($tsActual < $tsDesde) {
                     $diffSec = $tsDesde - $tsActual;
-                    $ciclosSaltar = (int)ceil($diffSec / ($diasFrecuencia * 86400));
+                    $ciclosSaltar = max(0, (int)floor($diffSec / ($diasFrecuencia * 86400)));
                     $tsActual = $tsActual + ($ciclosSaltar * $diasFrecuencia * 86400);
                 }
 
                 while ($tsActual <= $tsHasta) {
-                    if ($tsActual >= $tsDesde) {
-                        $fechaOriginal = date('Y-m-d', $tsActual);
-                        // Ajustar la fecha según el día de la semana que indique la ruta
-                        $fechaAjustada = self::ajustarFechaADiaRuta($fechaOriginal, $rutaNombre);
-                        $fechasProyectadas[] = $fechaAjustada;
+                    $fechaOriginal = date('Y-m-d', $tsActual);
+                    // Si está activa la opción, ajustar la fecha según el día de la semana que indique la ruta
+                    $fechaFinal = $usarDiaRuta ? self::ajustarFechaADiaRuta($fechaOriginal, $rutaNombre) : $fechaOriginal;
+                    if ($fechaFinal >= $fechaDesde && $fechaFinal <= $fechaHasta) {
+                        $fechasProyectadas[] = $fechaFinal;
                     }
                     $tsActual += ($diasFrecuencia * 86400);
                 }
@@ -355,7 +360,8 @@ class EventCalculatorService {
                     'cliente_id' => $clienteId,
                     'nombre' => $cli['nombre'],
                     'ruta' => $rutaNombre,
-                    'fechas_agendadas' => $resAgendado['eventos_creados']
+                    'fechas_agendadas' => $resAgendado['eventos_creados'],
+                    'fechas_existentes' => $resAgendado['eventos_existentes']
                 ];
             }
         }

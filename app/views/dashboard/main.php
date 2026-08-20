@@ -267,6 +267,21 @@
                     </div>
                 </div>
 
+                <!-- Configuración de Ajuste por Día de Ruta -->
+                <div class="bg-amber-50/60 border border-amber-200 p-5 rounded-2xl flex items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-amber-600 text-xl">route</span>
+                            <h3 class="text-sm font-bold text-gray-800">Ajustar eventos al día de la Ruta</h3>
+                        </div>
+                        <p class="text-xs text-gray-600">Al activar esta opción, las fechas de recolección tentativas se proyectarán teniendo en cuenta el día de la semana configurado en la Ruta del cliente (Lunes, Martes, Miércoles, etc.).</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                        <input type="checkbox" id="toggle-usar-dia-ruta" onchange="guardarConfiguracionProgramacion(this.checked)" class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    </label>
+                </div>
+
                 <div class="bg-slate-50 border border-slate-200 p-5 rounded-2xl space-y-4">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>

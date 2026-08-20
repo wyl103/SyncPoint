@@ -314,8 +314,7 @@
                     <span class="material-symbols-outlined text-[16px] text-gray-400">person_search</span> Cliente <span class="text-red-500">*</span>
                 </label>
                 <div class="relative">
-                    <input type="text" id="form-prog-cliente-search" placeholder="Escribe el nombre o teléfono del cliente..." autocomplete="off" oninput="buscarClienteModalProg()" onfocus="buscarClienteModalProg()" class="w-full p-3 pr-8 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-charcoal outline-none focus:border-primary focus:bg-white transition">
-                    <span class="material-symbols-outlined absolute right-3 top-3.5 text-gray-400 pointer-events-none text-[18px]">search</span>
+                    <input type="text" id="form-prog-cliente-search" placeholder="Escribe el nombre o teléfono del cliente..." autocomplete="off" oninput="buscarClienteModalProg()" onfocus="buscarClienteModalProg()" class="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-charcoal outline-none focus:border-primary focus:bg-white transition">
                     
                     <div id="dropdown-prog-clientes-options" class="hidden absolute z-30 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto text-xs font-semibold text-gray-700"></div>
                 </div>

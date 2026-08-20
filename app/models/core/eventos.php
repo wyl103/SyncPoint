@@ -1,6 +1,8 @@
 <?php
 // app/models/core/eventos.php
 require_once __DIR__ . '/../../services/Database.php';
+require_once __DIR__ . '/../../services/AppConfig.php';
+require_once __DIR__ . '/../../services/eventos/EventCalculatorService.php';
 
 class Evento {
     private $pdo;
@@ -152,10 +154,13 @@ class Evento {
         if (!empty($origin) && is_numeric($origin)) {
             return (int)$origin;
         }
+        if (!empty($_SESSION['user_id'])) {
+            return (int)$_SESSION['user_id'];
+        }
         return null;
     }
 
-    public function create($clienteId, $rutaId, $fechaProgramada, $estado = 'programado', $tipo = 'frecuente', $notificaciones = null, $eventoOrigin = 'sistem') {
+    public function create($clienteId, $rutaId, $fechaProgramada, $estado = 'programado', $tipo = 'frecuente', $notificaciones = null, $eventoOrigin = 'user') {
         $estadoValidado = self::validarEstado($estado);
         $tipoValidado = self::validarTipo($tipo);
         $originValidado = self::validarOrigin($eventoOrigin);
@@ -342,7 +347,7 @@ class Evento {
         $stmtC = $this->pdo->query($sqlClientes);
         $todosClientes = $stmtC->fetchAll();
 
-        $targetTs = strtotime($fecha);
+        $usarDiaRuta = (bool)AppConfig::get('programacion_usar_dia_ruta', false);
         $eventosTentativos = [];
 
         foreach ($todosClientes as $c) {
@@ -351,20 +356,8 @@ class Evento {
                 continue;
             }
 
-            $diasFrecuencia = (int)($c['frecuencia_dias'] ?? 0);
-            if ($diasFrecuencia <= 0 || empty($c['fecha_base'])) {
-                continue;
-            }
-
-            $esCiclo = false;
-            $baseTs = strtotime($c['fecha_base']);
-            $diffDays = (int)round(($targetTs - $baseTs) / 86400);
-
-            if ($diffDays >= 0 && ($diffDays % $diasFrecuencia === 0)) {
-                $esCiclo = true;
-            }
-
-            if ($esCiclo) {
+            if ($this->esFechaTentativaParaCliente($c, $fecha, $usarDiaRuta)) {
+                $diasFrecuencia = (int)($c['frecuencia_dias'] ?? 0);
                 $eventosTentativos[] = [
                     'id' => null,
                     'cliente_id' => $c['cliente_id'],
@@ -375,6 +368,7 @@ class Evento {
                     'notificaciones' => null,
                     'cliente_nombre' => $c['cliente_nombre'],
                     'telefono_whatsapp' => $c['telefono_whatsapp'],
+                    'fecha_base' => $c['fecha_base'],
                     'ruta_nombre' => $c['ruta_nombre'] ?? 'Sin Ruta',
                     'ruta_ciudad' => $c['ruta_ciudad'] ?? '',
                     'sucursal_id' => $c['sucursal_id'] ?? 0,
@@ -436,13 +430,15 @@ class Evento {
             $clienteEventosMap[$row['fecha_programada']][$row['cliente_id']] = true;
         }
 
-        $sqlC = "SELECT c.id, c.fecha_base, f.dias AS frecuencia_dias 
+        $sqlC = "SELECT c.id, c.fecha_base, f.dias AS frecuencia_dias, r.nombre AS ruta_nombre 
                  FROM clientes c 
+                 LEFT JOIN rutas r ON c.ruta_id = r.id
                  LEFT JOIN frecuencias f ON c.frecuencia_id = f.id
                  WHERE c.fecha_base IS NOT NULL AND TRIM(c.fecha_base::text) != ''";
         $stmtC = $this->pdo->query($sqlC);
         $clientes = $stmtC->fetchAll();
 
+        $usarDiaRuta = (bool)AppConfig::get('programacion_usar_dia_ruta', false);
         $resultados = [];
 
         for ($ts = $tsInicio; $ts <= $tsFin; $ts += 86400) {
@@ -456,12 +452,7 @@ class Evento {
                     continue;
                 }
 
-                $diasFrecuencia = (int)($c['frecuencia_dias'] ?? 0);
-                if ($diasFrecuencia <= 0 || empty($c['fecha_base'])) continue;
-
-                $baseTs = strtotime($c['fecha_base']);
-                $diffDays = (int)round(($ts - $baseTs) / 86400);
-                if ($diffDays >= 0 && ($diffDays % $diasFrecuencia === 0)) {
+                if ($this->esFechaTentativaParaCliente($c, $fechaIso, $usarDiaRuta)) {
                     $conteoTent++;
                 }
             }
@@ -470,5 +461,39 @@ class Evento {
         }
 
         return $resultados;
+    }
+
+    private function esFechaTentativaParaCliente($cliente, $targetFechaStr, $usarDiaRuta = false) {
+        $diasFrecuencia = (int)($cliente['frecuencia_dias'] ?? $cliente['dias'] ?? 0);
+        if ($diasFrecuencia <= 0 || empty($cliente['fecha_base'])) {
+            return false;
+        }
+
+        $targetTs = strtotime($targetFechaStr);
+        $baseTs = strtotime($cliente['fecha_base']);
+
+        if (!$usarDiaRuta) {
+            $diffDays = (int)round(($targetTs - $baseTs) / 86400);
+            return ($diffDays >= 0 && ($diffDays % $diasFrecuencia === 0));
+        }
+
+        $diffDays = (int)round(($targetTs - $baseTs) / 86400);
+        if ($diffDays < -4) {
+            return false;
+        }
+
+        $kApprox = (int)round($diffDays / $diasFrecuencia);
+        $rutaNombre = $cliente['ruta_nombre'] ?? '';
+
+        for ($k = max(0, $kApprox - 1); $k <= $kApprox + 1; $k++) {
+            $cycleTs = $baseTs + ($k * $diasFrecuencia * 86400);
+            $rawFechaStr = date('Y-m-d', $cycleTs);
+            $adjFechaStr = EventCalculatorService::ajustarFechaADiaRuta($rawFechaStr, $rutaNombre);
+            if ($adjFechaStr === $targetFechaStr) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
