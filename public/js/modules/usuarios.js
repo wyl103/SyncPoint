@@ -532,16 +532,16 @@ function renderizarTablaDestinatariosMasivos(eventos) {
     }
 
     const stateStyles = {
-        aceptado: 'bg-emerald-50 text-emerald-700 border-emerald-300 font-bold',
-        aceptada: 'bg-emerald-50 text-emerald-700 border-emerald-300 font-bold',
-        rechazado: 'bg-red-50 text-red-700 border-red-300 font-bold',
-        rechazada: 'bg-red-50 text-red-700 border-red-300 font-bold',
-        denegada: 'bg-red-50 text-red-700 border-red-300 font-bold'
+        aceptado: 'badge-estado-aceptada',
+        aceptada: 'badge-estado-aceptada',
+        rechazado: 'badge-estado-rechazada',
+        rechazada: 'badge-estado-rechazada',
+        denegada: 'badge-estado-denegada'
     };
 
     tbody.innerHTML = eventos.map(ev => {
         const est = (ev.estado || '').toLowerCase();
-        const stClass = stateStyles[est] || 'bg-transparent text-charcoal border-charcoal font-bold';
+        const stClass = stateStyles[est] || 'badge-estado-default';
         return `
             <tr class="hover:bg-gray-50/80 transition">
                 <td class="p-2.5 font-bold text-charcoal">${escapeHtml(ev.cliente_nombre)}</td>

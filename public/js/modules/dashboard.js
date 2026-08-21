@@ -6,7 +6,11 @@ let mesActual = new Date();
 
 function obtenerBadgeEstado(estado, esTentativa) {
     if (esTentativa || estado === 'tentativa') {
-        return { text: 'TENTATIVA', class: 'bg-transparent text-charcoal border-charcoal font-bold' };
+        return { 
+            text: 'TENTATIVA', 
+            class: 'badge-estado-default',
+            cardClass: 'card-estado-default'
+        };
     }
 
     const est = (estado || 'programada').toLowerCase();
@@ -15,30 +19,76 @@ function obtenerBadgeEstado(estado, esTentativa) {
         case 'aceptado':
         case 'aceptada':
         case 'completada':
-            return { text: 'ACEPTADA', class: 'bg-emerald-50 text-emerald-700 border-emerald-300 font-bold' };
+            return { 
+                text: 'ACEPTADA', 
+                class: 'badge-estado-aceptada',
+                cardClass: 'card-estado-aceptada'
+            };
+        case 'denegado':
+        case 'denegada':
+            return { 
+                text: 'DENEGADA', 
+                class: 'badge-estado-denegada',
+                cardClass: 'card-estado-denegada'
+            };
         case 'rechazado':
         case 'rechazada':
-        case 'denegada':
-            return { text: 'RECHAZADA', class: 'bg-red-50 text-red-700 border-red-300 font-bold' };
+            return { 
+                text: 'RECHAZADA', 
+                class: 'badge-estado-rechazada',
+                cardClass: 'card-estado-rechazada'
+            };
         case 'consulta':
-            return { text: 'CONSULTA', class: 'bg-amber-100 text-amber-900 border-amber-400 font-extrabold shadow-2xs' };
+            return { 
+                text: 'CONSULTA', 
+                class: 'badge-estado-consulta',
+                cardClass: 'card-estado-default'
+            };
         case 'cancelada':
         case 'error':
-            return { text: est.toUpperCase(), class: 'bg-red-50 text-red-700 border-red-300 font-bold' };
+            return { 
+                text: est.toUpperCase(), 
+                class: 'badge-estado-denegada',
+                cardClass: 'card-estado-denegada'
+            };
         case 'programado':
         case 'programada':
-            return { text: 'PROGRAMADA', class: 'bg-transparent text-charcoal border-charcoal font-bold' };
+            return { 
+                text: 'PROGRAMADA', 
+                class: 'badge-estado-default',
+                cardClass: 'card-estado-default'
+            };
         case 'notificacion1':
-            return { text: 'NOTIFICACIÓN 1', class: 'bg-transparent text-charcoal border-charcoal font-bold' };
+            return { 
+                text: 'NOTIFICACIÓN 1', 
+                class: 'badge-estado-default',
+                cardClass: 'card-estado-default'
+            };
         case 'notificacion2':
-            return { text: 'NOTIFICACIÓN 2', class: 'bg-transparent text-charcoal border-charcoal font-bold' };
+            return { 
+                text: 'NOTIFICACIÓN 2', 
+                class: 'badge-estado-default',
+                cardClass: 'card-estado-default'
+            };
         case 'notificacion3':
-            return { text: 'NOTIFICACIÓN 3', class: 'bg-transparent text-charcoal border-charcoal font-bold' };
+            return { 
+                text: 'NOTIFICACIÓN 3', 
+                class: 'badge-estado-default',
+                cardClass: 'card-estado-default'
+            };
         case 'agendado':
         case 'agendada':
-            return { text: 'AGENDADA', class: 'bg-transparent text-charcoal border-charcoal font-bold' };
+            return { 
+                text: 'AGENDADA', 
+                class: 'badge-estado-default',
+                cardClass: 'card-estado-default'
+            };
         default:
-            return { text: est.toUpperCase(), class: 'bg-transparent text-charcoal border-charcoal font-bold' };
+            return { 
+                text: est.toUpperCase(), 
+                class: 'badge-estado-default',
+                cardClass: 'card-estado-default'
+            };
     }
 }
 
@@ -139,9 +189,10 @@ async function renderDia(fechaIso, titulo, btnElement) {
                 let badge = obtenerBadgeEstado(estadoValor, esTentativa);
                 let esConsulta = (estadoValor.toLowerCase() === 'consulta');
                 let blinkClass = esConsulta ? 'card-consulta-blink' : '';
+                let cardClass = badge.cardClass || 'card-estado-default';
 
                 grupoContainer.innerHTML += `
-                    <div class="bg-white border border-gray-200 p-4 rounded-2xl shadow-xs flex flex-col justify-between gap-3 hover:border-primary/70 transition ${blinkClass}">
+                    <div class="p-4 rounded-2xl shadow-xs flex flex-col justify-between gap-3 hover:border-primary/70 transition ${cardClass} ${blinkClass}">
                         <!-- Sección Superior: Información del Cliente -->
                         <div class="cursor-pointer min-w-0" onclick="verDetallesRecoleccion(${rec.id || 'null'})">
                             <div class="flex items-center gap-2 flex-wrap justify-between">

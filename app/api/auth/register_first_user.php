@@ -48,17 +48,15 @@ try {
         exit;
     }
 
-    // Encriptar la contraseña con el algoritmo BCrypt de PHP
-    $claveHash = password_hash($password, PASSWORD_BCRYPT);
+    require_once __DIR__ . '/../../services/core/usuarios.php';
+    $usuarioService = new UsuarioService();
 
-    $stmtInsert = $pdo->prepare("INSERT INTO usuarios (nombre, correo, clave, tipo) VALUES (:nombre, :correo, :clave, 'administrador') RETURNING id");
-    $stmtInsert->execute([
+    $newId = $usuarioService->crearUsuario([
         'nombre' => $nombre,
-        'correo' => $correo,
-        'clave' => $claveHash
+        'email' => $correo,
+        'password' => $password,
+        'tipo' => 'administrador'
     ]);
-
-    $newId = $stmtInsert->fetchColumn();
 
     echo json_encode([
         'success' => true,
