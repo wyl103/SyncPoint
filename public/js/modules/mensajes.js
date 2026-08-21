@@ -251,13 +251,14 @@ function renderizarListaConversaciones(conversaciones) {
         const unreadCount = parseInt(conv.unread_count || 0, 10);
         
         // Determinar si el último mensaje fue entrante (del cliente) o saliente (nuestro)
-        const isIncoming = (conv.ultimo_mensaje_tipo === 0 || (string(conv.ultimo_mensaje_tipo) === '0') || conv.ultimo_mensaje_tipo === 'incoming');
+        const isIncoming = (conv.ultimo_mensaje_tipo === 0 || (String(conv.ultimo_mensaje_tipo) === '0') || conv.ultimo_mensaje_tipo === 'incoming');
         const isOutgoing = !isIncoming;
 
         // Formato de hora/fecha amigable
         let fechaStr = '';
         if (conv.ultimo_mensaje_at) {
-            const dateObj = new Date(is_numeric(conv.ultimo_mensaje_at) ? conv.ultimo_mensaje_at * 1000 : conv.ultimo_mensaje_at);
+            const isNum = !isNaN(conv.ultimo_mensaje_at) && !isNaN(parseFloat(conv.ultimo_mensaje_at));
+            const dateObj = new Date(isNum ? Number(conv.ultimo_mensaje_at) * 1000 : conv.ultimo_mensaje_at);
             const hoy = new Date();
             const esHoy = dateObj.toDateString() === hoy.toDateString();
 

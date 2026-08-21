@@ -51,6 +51,65 @@ class ChatwootService {
     }
 
     /**
+     * Helper para formatear y asegurar URLs absolutas en archivos adjuntos (audio, imágenes, videos, docs)
+     */
+    private function formatAttachments($rawAttachments) {
+        if (empty($rawAttachments) || !is_array($rawAttachments)) {
+            return [];
+        }
+        $formatted = [];
+        foreach ($rawAttachments as $att) {
+            if (!is_array($att)) continue;
+            $dataUrl = $att['data_url'] ?? ($att['url'] ?? '');
+            if (!empty($dataUrl) && strpos($dataUrl, 'http') !== 0 && strpos($dataUrl, '//') !== 0) {
+                $dataUrl = $this->baseUrl . (strpos($dataUrl, '/') === 0 ? '' : '/') . $dataUrl;
+            }
+            $thumbUrl = $att['thumb_url'] ?? '';
+            if (!empty($thumbUrl) && strpos($thumbUrl, 'http') !== 0 && strpos($thumbUrl, '//') !== 0) {
+                $thumbUrl = $this->baseUrl . (strpos($thumbUrl, '/') === 0 ? '' : '/') . $thumbUrl;
+            }
+
+            $formatted[] = [
+                'id' => $att['id'] ?? null,
+                'file_type' => $att['file_type'] ?? 'file',
+                'extension' => $att['extension'] ?? '',
+                'data_url' => $dataUrl,
+                'thumb_url' => $thumbUrl,
+                'file_size' => $att['file_size'] ?? 0
+            ];
+        }
+        return $formatted;
+    }
+
+    /**
+     * Helper para obtener un texto amigable de vista previa cuando el mensaje solo contiene adjuntos
+     */
+    private function getMessagePreviewText($content, $attachments = []) {
+        $trimmed = trim((string)$content);
+        if ($trimmed !== '') {
+            return $trimmed;
+        }
+
+        if (!empty($attachments) && is_array($attachments)) {
+            $first = $attachments[0] ?? [];
+            $fType = strtolower($first['file_type'] ?? '');
+            $ext = strtolower($first['extension'] ?? '');
+
+            if (strpos($fType, 'audio') !== false || in_array($ext, ['ogg', 'oga', 'mp3', 'wav', 'm4a', 'aac', 'opus'])) {
+                return '🎵 Mensaje de audio';
+            } elseif (strpos($fType, 'image') !== false || in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'])) {
+                return '📷 Foto / Imagen';
+            } elseif (strpos($fType, 'video') !== false || in_array($ext, ['mp4', 'mov', 'webm', 'avi', 'mkv'])) {
+                return '📹 Video';
+            } else {
+                return '📄 Archivo adjunto';
+            }
+        }
+
+        return '';
+    }
+
+    /**
      * Helper genérico para peticiones HTTP a la API de Chatwoot
      */
     private function makeRequest($endpoint, $method = 'GET', $data = null) {
@@ -421,6 +480,8 @@ class ChatwootService {
 
             $lastMsg = $conv['last_non_activity_message'] ?? ($conv['messages'][0] ?? null);
             $lastMsgContent = $lastMsg['content'] ?? '';
+            $lastMsgAttachments = $this->formatAttachments($lastMsg['attachments'] ?? (!empty($lastMsg['attachment']) ? [$lastMsg['attachment']] : []));
+            $previewContent = $this->getMessagePreviewText($lastMsgContent, $lastMsgAttachments);
             $lastMsgType = $lastMsg['message_type'] ?? 0;
             $lastMsgStatus = $lastMsg['status'] ?? 'sent';
             $lastMsgTime = $lastMsg['created_at'] ?? ($conv['last_activity_at'] ?? $conv['updated_at'] ?? null);
@@ -448,10 +509,11 @@ class ChatwootService {
                 'telefono' => $phone ?: ($clienteMatch['telefono_whatsapp'] ?? ''),
                 'sucursal_nombre' => $clienteMatch['sucursal_nombre'] ?? null,
                 'ruta_nombre' => $clienteMatch['ruta_nombre'] ?? null,
-                'ultimo_mensaje' => $lastMsgContent,
+                'ultimo_mensaje' => $previewContent,
                 'ultimo_mensaje_tipo' => $lastMsgType,
                 'ultimo_mensaje_status' => $lastMsgStatus,
                 'ultimo_mensaje_at' => $lastMsgTime,
+                'attachments' => $lastMsgAttachments,
                 'unread_count' => $exactUnread,
                 'status' => $conv['status'] ?? 'open',
                 'is_24h_expired' => $is24hExpired,
@@ -719,6 +781,8 @@ class ChatwootService {
                     continue;
                 }
 
+                $msgAttachments = $this->formatAttachments($msg['attachments'] ?? (!empty($msg['attachment']) ? [$msg['attachment']] : []));
+
                 $mensajes[] = [
                     'id' => $msg['id'] ?? null,
                     'content' => $msg['content'] ?? '',
@@ -726,7 +790,8 @@ class ChatwootService {
                     'status' => $msg['status'] ?? 'sent',
                     'created_at' => $createdAt,
                     'sender' => $sender,
-                    'is_incoming' => $isIncoming
+                    'is_incoming' => $isIncoming,
+                    'attachments' => $msgAttachments
                 ];
             }
         }
