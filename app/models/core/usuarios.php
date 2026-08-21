@@ -82,8 +82,18 @@ class Usuario {
         return $stmt->fetch();
     }
 
+    public static function generateUuid() {
+        $data = random_bytes(16);
+        $data[6] = chr(ord($data[6]) & 0x0f | 0x40);
+        $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
+    }
+
     public function create($nombre, $correo, $passwordHash, $tipo = 'normal') {
         $tipoValidado = self::validarTipo($tipo);
+        $correoLwr = strtolower(trim($correo));
+
+        // 1. Intentar inserción estándar (para tablas con id bigint autoincremental o DEFAULT)
         try {
             $sql = "INSERT INTO usuarios (nombre, correo, clave, tipo, created_at) 
                     VALUES (:nombre, :correo, :clave, :tipo, CURRENT_DATE) 
@@ -91,25 +101,59 @@ class Usuario {
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([
                 'nombre' => $nombre,
-                'correo' => strtolower(trim($correo)),
+                'correo' => $correoLwr,
                 'clave' => $passwordHash,
                 'tipo' => $tipoValidado
             ]);
             $result = $stmt->fetch();
             return $result ? $result['id'] : true;
-        } catch (Exception $e) {
-            $sql = "INSERT INTO usuarios (nombre, correo, clave, tipo) 
-                    VALUES (:nombre, :correo, :clave, :tipo) 
-                    RETURNING id";
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([
-                'nombre' => $nombre,
-                'correo' => strtolower(trim($correo)),
-                'clave' => $passwordHash,
-                'tipo' => $tipoValidado
-            ]);
-            $result = $stmt->fetch();
-            return $result ? $result['id'] : true;
+        } catch (Exception $e1) {
+            try {
+                $sql = "INSERT INTO usuarios (nombre, correo, clave, tipo) 
+                        VALUES (:nombre, :correo, :clave, :tipo) 
+                        RETURNING id";
+                $stmt = $this->pdo->prepare($sql);
+                $stmt->execute([
+                    'nombre' => $nombre,
+                    'correo' => $correoLwr,
+                    'clave' => $passwordHash,
+                    'tipo' => $tipoValidado
+                ]);
+                $result = $stmt->fetch();
+                return $result ? $result['id'] : true;
+            } catch (Exception $e2) {
+                // 2. Si falla por not-null constraint en 'id' (ej. columna bpchar / uuid sin DEFAULT sequence)
+                $uuid = self::generateUuid();
+                try {
+                    $sql = "INSERT INTO usuarios (id, nombre, correo, clave, tipo, created_at) 
+                            VALUES (:id, :nombre, :correo, :clave, :tipo, CURRENT_DATE) 
+                            RETURNING id";
+                    $stmt = $this->pdo->prepare($sql);
+                    $stmt->execute([
+                        'id' => $uuid,
+                        'nombre' => $nombre,
+                        'correo' => $correoLwr,
+                        'clave' => $passwordHash,
+                        'tipo' => $tipoValidado
+                    ]);
+                    $result = $stmt->fetch();
+                    return $result ? $result['id'] : $uuid;
+                } catch (Exception $e3) {
+                    $sql = "INSERT INTO usuarios (id, nombre, correo, clave, tipo) 
+                            VALUES (:id, :nombre, :correo, :clave, :tipo) 
+                            RETURNING id";
+                    $stmt = $this->pdo->prepare($sql);
+                    $stmt->execute([
+                        'id' => $uuid,
+                        'nombre' => $nombre,
+                        'correo' => $correoLwr,
+                        'clave' => $passwordHash,
+                        'tipo' => $tipoValidado
+                    ]);
+                    $result = $stmt->fetch();
+                    return $result ? $result['id'] : $uuid;
+                }
+            }
         }
     }
 
