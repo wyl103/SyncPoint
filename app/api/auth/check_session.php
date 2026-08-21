@@ -1,23 +1,57 @@
 <?php
 // app/api/auth/check_session.php
-
-// Mismas configuraciones estrictas del login
-ini_set('session.cookie_httponly', 1);
-ini_set('session.use_only_cookies', 1);
-session_start();
-
 header('Content-Type: application/json');
 
-// Revisar si existe el ID de usuario en la sesión
-if (isset($_SESSION['user_id'])) {
-    echo json_encode([
-        'authenticated' => true,
-        'user' => [
-            'nombre' => $_SESSION['user_nombre'],
-            // Puedes enviar más datos no sensibles aquí
-        ]
-    ]);
-} else {
-    http_response_code(401);
-    echo json_encode(['authenticated' => false]);
+ini_set('session.cookie_httponly', 1);
+ini_set('session.use_only_cookies', 1);
+ini_set('session.cookie_path', '/');
+session_start();
+
+require_once __DIR__ . '/../../services/Database.php';
+
+try {
+    $db = new Database();
+    $pdo = $db->getConnection();
+
+    $stmtCount = $pdo->query("SELECT COUNT(id) FROM usuarios");
+    $totalUsuarios = (int)$stmtCount->fetchColumn();
+    $hasUsers = ($totalUsuarios > 0);
+
+    if (!$hasUsers) {
+        http_response_code(200);
+        echo json_encode([
+            'authenticated' => false,
+            'has_users' => false,
+            'message' => 'No existen usuarios registrados.'
+        ]);
+        exit;
+    }
+
+    if (isset($_SESSION['user_id'])) {
+        $stmtUser = $pdo->prepare("SELECT COALESCE(tipo, 'administrador') AS tipo FROM usuarios WHERE id = :id");
+        $stmtUser->execute(['id' => $_SESSION['user_id']]);
+        $userRow = $stmtUser->fetch();
+        $userTipo = $userRow ? $userRow['tipo'] : ($_SESSION['user_tipo'] ?? 'administrador');
+
+        echo json_encode([
+            'authenticated' => true,
+            'has_users' => true,
+            'user' => [
+                'id' => $_SESSION['user_id'],
+                'nombre' => $_SESSION['user_nombre'] ?? 'Usuario',
+                'tipo' => $userTipo
+            ]
+        ]);
+    } else {
+        http_response_code(200);
+        echo json_encode([
+            'authenticated' => false,
+            'has_users' => true,
+            'message' => 'No hay sesión activa'
+        ]);
+    }
+} catch (Exception $e) {
+    error_log("Error en check_session: " . $e->getMessage());
+    http_response_code(500);
+    echo json_encode(['authenticated' => false, 'has_users' => true, 'message' => 'Error en el servidor: ' . $e->getMessage()]);
 }
