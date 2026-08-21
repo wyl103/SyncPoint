@@ -51,14 +51,19 @@ function renderizarMensajesChatwoot(mensajes, forzarScroll = false) {
 
     mensajes.forEach(msg => {
         const contenido = (msg.content || '').trim();
-        if (!contenido) return;
+        const attachments = Array.isArray(msg.attachments) ? msg.attachments : [];
+
+        // Si no hay contenido ni adjuntos y no es mensaje de actividad, omitir
+        if (!contenido && attachments.length === 0 && msg.message_type !== 2 && msg.message_type !== 'activity') {
+            return;
+        }
 
         // Mensaje de actividad del sistema
         if (msg.message_type === 2 || msg.message_type === 'activity') {
             list.innerHTML += `
                 <div class="flex justify-center my-2">
                     <span class="bg-gray-200/80 text-gray-600 text-[10px] font-semibold px-3 py-1 rounded-full text-center shadow-xs">
-                        ${contenido}
+                        ${typeof escapeHtml === 'function' ? escapeHtml(contenido) : contenido}
                     </span>
                 </div>
             `;
@@ -94,6 +99,75 @@ function renderizarMensajesChatwoot(mensajes, forzarScroll = false) {
 
         if (!isIncoming && (msg.status === 'failed' || msg.status === 'error')) {
             bubbleClass += ' chat-bubble-failed';
+        }
+
+        // Renderizado de archivos adjuntos (Audios, Imágenes, Videos, Documentos)
+        let attachmentsHtml = '';
+        if (attachments.length > 0) {
+            attachments.forEach(att => {
+                const fileType = (att.file_type || '').toLowerCase();
+                const ext = (att.extension || '').toLowerCase();
+                const dataUrl = att.data_url || '';
+                const thumbUrl = att.thumb_url || dataUrl;
+
+                if (!dataUrl) return;
+
+                // 1. Audio (Mensajes de voz de WhatsApp / Notas de voz)
+                if (fileType.includes('audio') || ['ogg', 'oga', 'mp3', 'wav', 'm4a', 'aac', 'opus'].includes(ext)) {
+                    attachmentsHtml += `
+                        <div class="my-1 p-2 rounded-xl bg-black/5 flex flex-col gap-1.5 min-w-[240px]">
+                            <div class="flex items-center gap-1.5 text-xs font-bold text-charcoal/80">
+                                <span class="material-symbols-outlined text-[18px] text-amber-800">mic</span>
+                                <span>Mensaje de voz</span>
+                            </div>
+                            <audio controls preload="metadata" class="w-full h-8 outline-none">
+                                <source src="${dataUrl}" type="audio/${ext || 'ogg'}">
+                                <source src="${dataUrl}">
+                                Tu navegador no soporta reproducción de audio.
+                            </audio>
+                        </div>
+                    `;
+                } 
+                // 2. Imágenes (Fotos enviadas por el cliente)
+                else if (fileType.includes('image') || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
+                    attachmentsHtml += `
+                        <div class="my-1 rounded-xl overflow-hidden max-w-xs border border-black/10 shadow-2xs">
+                            <a href="${dataUrl}" target="_blank" rel="noopener noreferrer" class="block group relative" title="Click para abrir imagen completa">
+                                <img src="${thumbUrl || dataUrl}" alt="Imagen de WhatsApp" class="w-full max-h-64 object-cover group-hover:opacity-90 transition rounded-lg" loading="lazy" />
+                            </a>
+                        </div>
+                    `;
+                } 
+                // 3. Videos
+                else if (fileType.includes('video') || ['mp4', 'mov', 'webm', 'avi', 'mkv'].includes(ext)) {
+                    attachmentsHtml += `
+                        <div class="my-1 rounded-xl overflow-hidden max-w-xs border border-black/10 shadow-2xs">
+                            <video controls preload="metadata" class="w-full max-h-64 rounded-lg outline-none">
+                                <source src="${dataUrl}">
+                                Tu navegador no soporta reproducción de video.
+                            </video>
+                        </div>
+                    `;
+                } 
+                // 4. Documentos o archivos varios
+                else {
+                    const rawName = dataUrl.split('/').pop().split('?')[0] || `archivo.${ext || 'dat'}`;
+                    const fileName = decodeURIComponent(rawName);
+                    const safeName = typeof escapeHtml === 'function' ? escapeHtml(fileName) : fileName;
+                    attachmentsHtml += `
+                        <div class="my-1">
+                            <a href="${dataUrl}" target="_blank" rel="noopener noreferrer" download class="inline-flex items-center gap-2 p-2.5 bg-black/5 hover:bg-black/10 transition rounded-xl text-xs font-bold text-charcoal border border-black/5 shadow-2xs">
+                                <span class="material-symbols-outlined text-[22px] text-amber-800">description</span>
+                                <div class="flex flex-col text-left overflow-hidden">
+                                    <span class="truncate max-w-[180px] font-bold">${safeName}</span>
+                                    <span class="text-[10px] text-gray-500 font-normal">Descargar adjunto</span>
+                                </div>
+                                <span class="material-symbols-outlined text-[16px] text-gray-500 ml-1">download</span>
+                            </a>
+                        </div>
+                    `;
+                }
+            });
         }
 
         // Renderizado del pie de la burbuja con hora y estado
@@ -138,10 +212,19 @@ function renderizarMensajesChatwoot(mensajes, forzarScroll = false) {
             }
         }
 
+        let bodyHtml = '';
+        if (attachmentsHtml) {
+            bodyHtml += attachmentsHtml;
+        }
+        if (contenido) {
+            const safeContenido = typeof escapeHtml === 'function' ? escapeHtml(contenido) : contenido;
+            bodyHtml += `<p class="text-sm whitespace-pre-wrap leading-relaxed ${attachmentsHtml ? 'mt-1.5' : ''}">${safeContenido}</p>`;
+        }
+
         list.innerHTML += `
             <div class="${rowClass}" data-msg-id="${msg.id || ''}">
                 <div class="${bubbleClass}">
-                    <p class="text-sm whitespace-pre-wrap leading-relaxed">${contenido}</p>
+                    ${bodyHtml}
                     ${footerHtml}
                 </div>
             </div>
