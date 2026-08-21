@@ -1,4 +1,4 @@
-<main id="main-content" class="flex-1 overflow-y-auto p-4 md:p-8 relative w-full max-w-[1920px] mx-auto">
+<main id="main-content" class="mobile-scroll-container flex-1 overflow-y-auto p-4 md:p-8 relative w-full max-w-[1920px] mx-auto pb-28 md:pb-8">
     <style>
     @keyframes blinkConsultaCard {
         0%, 100% {
@@ -18,7 +18,7 @@
         border-color: #f59e0b !important;
     }
     </style>
-    <div id="tab-dashboard" class="space-y-6 max-w-4xl mx-auto pb-20 md:pb-0">
+    <div id="tab-dashboard" class="space-y-6 max-w-4xl mx-auto pb-28 md:pb-8">
         <div class="flex h-12 items-center rounded-xl bg-gray-200 p-1 mb-4">
             <label id="lbl-dia" onclick="changeDashView('dia')" class="flex h-full flex-1 cursor-pointer items-center justify-center rounded-lg text-sm font-bold bg-white shadow-sm text-charcoal transition-all">Día</label>
             <label id="lbl-semana" onclick="changeDashView('semana')" class="flex h-full flex-1 cursor-pointer items-center justify-center rounded-lg text-sm font-semibold text-gray-500 transition-all">Semana</label>
@@ -95,7 +95,7 @@
         </div>
     </div>
 
-    <div id="tab-clientes" class="hidden-view space-y-6 max-w-4xl mx-auto pb-20 md:pb-0">
+    <div id="tab-clientes" class="hidden-view space-y-6 max-w-4xl mx-auto pb-28 md:pb-8">
         <!-- SUB-PESTAÑA 1: DIRECTORIO DE CLIENTES -->
         <div id="subtab-directorio-clientes" class="space-y-6">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -253,7 +253,7 @@
     </div>
 
     <!-- ==================== PESTAÑA USUARIOS ==================== -->
-    <div id="tab-usuarios" class="hidden-view space-y-6 max-w-4xl mx-auto pb-20 md:pb-0">
+    <div id="tab-usuarios" class="hidden-view space-y-6 max-w-4xl mx-auto pb-28 md:pb-8">
         
         <!-- SUBTAB 1: Directorio de Usuarios -->
         <div id="subtab-directorio-usuarios" class="space-y-4">
@@ -506,7 +506,7 @@
     <!-- ========================================== -->
     <!-- PESTAÑA: MENSAJES / CHATS WHATSAPP (CHATWOOT) -->
     <!-- ========================================== -->
-    <div id="tab-mensajes" class="hidden-view space-y-4 max-w-5xl mx-auto pb-20 md:pb-6">
+    <div id="tab-mensajes" class="hidden-view space-y-4 max-w-5xl mx-auto pb-28 md:pb-8">
         <!-- Cabecera y Barra de Búsqueda -->
         <div class="bg-white border border-gray-200 p-5 sm:p-6 rounded-2xl shadow-xs space-y-4">
             <div class="flex items-center gap-3.5">

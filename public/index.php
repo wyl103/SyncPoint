@@ -61,7 +61,7 @@ require_once __DIR__ . '/../app/views/auth/login.php';
 
         <?php require_once __DIR__ . '/../app/views/dashboard/main.php'; ?>
 
-        <nav class="md:hidden bg-white border-t border-gray-200 py-2 px-1 flex justify-around items-center z-50 fixed bottom-0 left-0 right-0 w-full shadow-[0_-4px_12px_rgba(0,0,0,0.08)]">
+        <nav class="md:hidden mobile-bottom-nav bg-white border-t border-gray-200 py-2 px-1 flex justify-around items-center z-50 fixed bottom-0 left-0 right-0 w-full shadow-[0_-4px_12px_rgba(0,0,0,0.08)]">
             <button onclick="switchTab('dashboard')" class="nav-btn flex-1 flex flex-col items-center justify-center gap-1 text-charcoal cursor-pointer" data-target="dashboard">
                 <span class="material-symbols-outlined text-[20px] filled">event</span>
                 <span class="text-[9.5px] font-bold">Eventos</span>
