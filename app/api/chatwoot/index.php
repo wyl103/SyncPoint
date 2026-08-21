@@ -21,14 +21,34 @@ try {
     $service = new ChatwootService();
 
     if ($method === 'GET') {
-        $clienteId = $_GET['cliente_id'] ?? null;
-        if (!$clienteId) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'Parámetro cliente_id requerido']);
+        $action = $_GET['action'] ?? null;
+
+        // Resumen rápido de mensajes nuevos para el badge de navegación
+        if ($action === 'unread_summary' || $action === 'unread_count') {
+            $data = $service->getUnreadConversationsSummary();
+            echo json_encode(['success' => true, 'data' => $data]);
+            exit;
+        }
+        
+        // Listado de conversaciones paginadas de a 20
+        if ($action === 'conversations' || isset($_GET['page'])) {
+            $page = max(1, (int)($_GET['page'] ?? 1));
+            $status = $_GET['status'] ?? 'all';
+            $data = $service->getConversationsList($page, $status);
+            echo json_encode(['success' => true, 'data' => $data]);
             exit;
         }
 
-        $data = $service->obtenerChatCliente($clienteId);
+        $clienteId = $_GET['cliente_id'] ?? null;
+        $conversationId = $_GET['conversation_id'] ?? null;
+
+        if (!$clienteId && !$conversationId) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Parámetro cliente_id o conversation_id requerido']);
+            exit;
+        }
+
+        $data = $service->obtenerChatCliente($clienteId, $conversationId);
         echo json_encode(['success' => true, 'data' => $data]);
     } elseif ($method === 'POST') {
         $rawInput = file_get_contents('php://input');
@@ -36,14 +56,15 @@ try {
 
         $conversationId = $input['conversation_id'] ?? null;
         $content = trim($input['content'] ?? '');
+        $templateParams = $input['template_params'] ?? null;
 
-        if (!$conversationId || empty($content)) {
+        if (!$conversationId || (empty($content) && empty($templateParams))) {
             http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'conversation_id y contenido del mensaje son obligatorios']);
+            echo json_encode(['success' => false, 'message' => 'conversation_id y contenido del mensaje o plantilla son obligatorios']);
             exit;
         }
 
-        $res = $service->sendMessage($conversationId, $content);
+        $res = $service->sendMessage($conversationId, $content, $templateParams);
         echo json_encode(['success' => true, 'message' => 'Mensaje enviado a Chatwoot', 'response' => $res]);
     } else {
         http_response_code(405);

@@ -141,7 +141,7 @@ class Evento {
     }
 
     public static function validarEstado($estado) {
-        $permitidos = ['programado', 'notificacion1', 'notificacion2', 'notificacion3', 'aceptada', 'denegada', 'no_respondida', 'error', 'agendado', 'pendiente', 'completada', 'cancelada', 'tentativa'];
+        $permitidos = ['programado', 'notificacion1', 'notificacion2', 'notificacion3', 'aceptada', 'denegada', 'consulta', 'no_respondida', 'error', 'agendado', 'pendiente', 'completada', 'cancelada', 'tentativa'];
         return in_array(strtolower($estado), $permitidos) ? strtolower($estado) : 'programado';
     }
 
@@ -317,6 +317,15 @@ class Evento {
         $stmtE->execute(['fecha' => $fecha]);
         $eventosExplicitos = $stmtE->fetchAll();
 
+        // Sincronizar automáticamente respuestas de WhatsApp para eventos en notificación 1, 2 o 3
+        try {
+            require_once __DIR__ . '/../../integrations/chatwoot/ChatwootService.php';
+            $chatwootService = new ChatwootService();
+            $chatwootService->sincronizarRespuestasEventosNotificados($eventosExplicitos);
+        } catch (Exception $e) {
+            error_log("Error sincronizando respuestas de WhatsApp para eventos: " . $e->getMessage());
+        }
+
         $clientesConEvento = [];
         foreach ($eventosExplicitos as $ev) {
             if (!empty($ev['cliente_id'])) {
@@ -385,8 +394,33 @@ class Evento {
 
         $resultadoFiltrado = array_filter($todosCombinados, function($item) use ($estado, $sucursal) {
             if ($estado !== null && $estado !== '' && $estado !== 'todos') {
-                if (strtolower($item['estado_recoleccion']) !== strtolower($estado)) {
-                    return false;
+                $estadoItem = strtolower((string)($item['estado_recoleccion'] ?? ''));
+                $estadoFiltro = strtolower((string)$estado);
+
+                if ($estadoFiltro === 'tentativa') {
+                    if (empty($item['es_tentativa']) && $estadoItem !== 'tentativa') {
+                        return false;
+                    }
+                } elseif ($estadoFiltro === 'programado' || $estadoFiltro === 'programada') {
+                    if ($estadoItem !== 'programado' && $estadoItem !== 'programada') {
+                        return false;
+                    }
+                } elseif ($estadoFiltro === 'aceptado' || $estadoFiltro === 'aceptada') {
+                    if ($estadoItem !== 'aceptado' && $estadoItem !== 'aceptada') {
+                        return false;
+                    }
+                } elseif ($estadoFiltro === 'rechazado' || $estadoFiltro === 'rechazada' || $estadoFiltro === 'denegada') {
+                    if ($estadoItem !== 'rechazado' && $estadoItem !== 'rechazada' && $estadoItem !== 'denegada') {
+                        return false;
+                    }
+                } elseif ($estadoFiltro === 'agendado' || $estadoFiltro === 'agendada') {
+                    if ($estadoItem !== 'agendado' && $estadoItem !== 'agendada') {
+                        return false;
+                    }
+                } else {
+                    if ($estadoItem !== $estadoFiltro) {
+                        return false;
+                    }
                 }
             }
 

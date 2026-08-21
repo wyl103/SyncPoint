@@ -1,4 +1,23 @@
 <main id="main-content" class="flex-1 overflow-y-auto p-4 md:p-8 relative w-full max-w-[1920px] mx-auto">
+    <style>
+    @keyframes blinkConsultaCard {
+        0%, 100% {
+            background-color: #ffffff;
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+        }
+        50% {
+            background-color: #fef3c7;
+            border-color: #d97706;
+            box-shadow: 0 0 16px 3px rgba(245, 158, 11, 0.5);
+        }
+    }
+    .card-consulta-blink {
+        animation: blinkConsultaCard 1.4s infinite ease-in-out !important;
+        border-width: 2px !important;
+        border-color: #f59e0b !important;
+    }
+    </style>
     <div id="tab-dashboard" class="space-y-6 max-w-4xl mx-auto pb-20 md:pb-0">
         <div class="flex h-12 items-center rounded-xl bg-gray-200 p-1 mb-4">
             <label id="lbl-dia" onclick="changeDashView('dia')" class="flex h-full flex-1 cursor-pointer items-center justify-center rounded-lg text-sm font-bold bg-white shadow-sm text-charcoal transition-all">Día</label>
@@ -18,11 +37,17 @@
             </div>
 
             <div class="mb-4 flex justify-between items-center gap-2">
-                <button onclick="toggleFiltros()" class="flex-1 md:flex-none flex items-center justify-center gap-1 bg-white border border-gray-200 text-charcoal px-4 py-2 rounded-xl font-bold text-sm shadow-sm hover:bg-gray-50 transition">
-                    <span class="material-symbols-outlined text-[18px]">filter_list</span> Filtros
-                </button>
+                <div class="flex items-center gap-2 flex-1 md:flex-none">
+                    <button onclick="toggleFiltros()" class="flex-1 md:flex-none flex items-center justify-center gap-1.5 bg-white border border-gray-200 text-charcoal px-4 py-2 rounded-xl font-bold text-sm shadow-2xs hover:bg-gray-50 transition cursor-pointer">
+                        <span class="material-symbols-outlined text-[18px]">filter_list</span> Filtros
+                    </button>
+                    <button onclick="recargarDiaActual()" class="flex-1 md:flex-none flex items-center justify-center gap-1.5 bg-white border border-gray-200 text-charcoal hover:bg-gray-100 px-3.5 py-2 rounded-xl font-bold text-sm shadow-2xs transition cursor-pointer" title="Volver a consultar eventos">
+                        <span class="material-symbols-outlined text-[18px]">refresh</span>
+                        <span>Actualizar</span>
+                    </button>
+                </div>
 
-                <button onclick="descargarExcel()" class="flex-1 md:flex-none flex items-center justify-center gap-1 bg-white border border-gray-200 text-black hover:bg-gray-50 px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition">
+                <button onclick="descargarExcel()" class="flex-1 md:flex-none flex items-center justify-center gap-1.5 bg-white border border-gray-200 text-black hover:bg-gray-50 px-4 py-2 rounded-xl font-bold text-sm shadow-2xs transition cursor-pointer">
                     <span class="material-symbols-outlined text-[18px]">download</span> Excel
                 </button>
             </div>
@@ -302,11 +327,223 @@
                     </div>
                 </div>
 
-                <!-- Resultado de la Ejecución -->
+                <!-- Resultado de la Ejecución de Programación Automática -->
                 <div id="resultado-programacion-global" class="hidden space-y-3">
                     <!-- Se llena mediante JS -->
                 </div>
             </div>
+
+            <!-- CARD 2: Envío Masivo de Notificaciones por WhatsApp -->
+            <div class="bg-white border border-gray-200 p-6 rounded-2xl shadow-xs space-y-6">
+                <div class="flex items-center gap-3 border-b border-gray-100 pb-4">
+                    <div class="p-3 bg-primary/20 text-charcoal rounded-xl shrink-0">
+                        <span class="material-symbols-outlined text-2xl">forward_to_inbox</span>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-charcoal">Envío Masivo de Notificaciones por WhatsApp</h2>
+                        <p class="text-xs text-gray-500">Envía plantillas oficiales de WhatsApp a los clientes con eventos en las fechas y estados seleccionados.</p>
+                    </div>
+                </div>
+
+                <!-- Configuración de Filtros de Envío -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- 1. Rango de Fechas -->
+                    <div class="bg-gray-50/80 border border-gray-200 p-4 rounded-xl space-y-3">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-bold text-charcoal flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-[18px] text-gray-500">date_range</span>
+                                Fechas de los Eventos
+                            </label>
+                            <div class="flex items-center gap-1 text-[11px] font-bold">
+                                <button type="button" onclick="establecerRangoFechasMasivo('hoy')" class="px-2 py-0.5 rounded bg-white hover:bg-gray-100 border border-gray-200 text-gray-600 transition cursor-pointer">Hoy</button>
+                                <button type="button" onclick="establecerRangoFechasMasivo('manana')" class="px-2 py-0.5 rounded bg-white hover:bg-gray-100 border border-gray-200 text-gray-600 transition cursor-pointer">Mañana</button>
+                                <button type="button" onclick="establecerRangoFechasMasivo('proximos3')" class="px-2 py-0.5 rounded bg-primary/20 hover:bg-primary/30 border border-primary/40 text-charcoal transition cursor-pointer">3 Días</button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <span class="block text-[11px] font-bold text-gray-500 mb-1">Desde:</span>
+                                <input id="masivo-fecha-desde" type="date" onchange="consultarDestinatariosMasivos()" class="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold text-charcoal outline-none focus:border-primary">
+                            </div>
+                            <div>
+                                <span class="block text-[11px] font-bold text-gray-500 mb-1">Hasta:</span>
+                                <input id="masivo-fecha-hasta" type="date" onchange="consultarDestinatariosMasivos()" class="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold text-charcoal outline-none focus:border-primary">
+                            </div>
+                        </div>
+                        <p class="text-[11px] text-gray-500 leading-tight">Para notificar un solo día, selecciona la misma fecha en 'Desde' y 'Hasta'.</p>
+                    </div>
+
+                    <!-- 2. Plantilla de WhatsApp -->
+                    <div class="bg-gray-50/80 border border-gray-200 p-4 rounded-xl space-y-3">
+                        <label class="text-xs font-bold text-charcoal flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-[18px] text-gray-500">chat</span>
+                            Plantilla de WhatsApp
+                        </label>
+                        <select id="select-plantilla-masiva" onchange="actualizarVistaPreviaPlantillaMasiva()" class="w-full bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-bold text-charcoal outline-none focus:border-primary">
+                            <option value="confirmacion_entrega">Confirmación de Recolección (confirmacion_entrega)</option>
+                            <option value="hola_oilbless">Bienvenida OilBless (hola_oilbless)</option>
+                            <option value="hello_world">Prueba Rápida (hello_world)</option>
+                        </select>
+                        <div id="preview-plantilla-masiva-box" class="p-3 bg-white border border-gray-200 rounded-xl text-xs text-gray-600 space-y-1">
+                            <div class="font-bold text-charcoal text-[11px] flex items-center gap-1">
+                                <span class="material-symbols-outlined text-primary text-[16px]">visibility</span>
+                                Vista previa aproximada:
+                            </div>
+                            <p id="preview-plantilla-masiva-texto" class="text-[11.5px] italic text-gray-700 leading-relaxed bg-amber-50/50 p-2 rounded-lg border border-amber-100">
+                                "Hola <strong>[Nombre Cliente]</strong>, te escribimos de OilBless para confirmar tu servicio del día <strong>[Fecha Programada]</strong>. ¿Podemos pasar a retirar el aceite?"
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Selección de Estados de Eventos -->
+                <div class="space-y-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <label class="text-xs font-bold text-charcoal flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-[18px] text-gray-500">checklist</span>
+                            Estados de los Eventos a Incluir
+                        </label>
+                        <div class="flex items-center gap-2 text-xs font-bold">
+                            <button type="button" onclick="marcarTodosEstadosMasivos(true)" class="text-primary hover:underline cursor-pointer">Seleccionar todos</button>
+                            <span class="text-gray-300">|</span>
+                            <button type="button" onclick="marcarTodosEstadosMasivos(false)" class="text-gray-500 hover:underline cursor-pointer">Desmarcar todos</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+                        <label class="flex items-center gap-2 p-2.5 bg-gray-50 hover:bg-gray-100/80 border border-gray-200 rounded-xl cursor-pointer transition select-none">
+                            <input type="checkbox" name="chk-estado-masivo" value="programado" checked onchange="consultarDestinatariosMasivos()" class="rounded text-primary focus:ring-primary w-4 h-4">
+                            <span class="text-xs font-bold text-charcoal">Programado</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2.5 bg-gray-50 hover:bg-gray-100/80 border border-gray-200 rounded-xl cursor-pointer transition select-none">
+                            <input type="checkbox" name="chk-estado-masivo" value="notificacion1" onchange="consultarDestinatariosMasivos()" class="rounded text-primary focus:ring-primary w-4 h-4">
+                            <span class="text-xs font-bold text-charcoal">Notificación 1</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2.5 bg-gray-50 hover:bg-gray-100/80 border border-gray-200 rounded-xl cursor-pointer transition select-none">
+                            <input type="checkbox" name="chk-estado-masivo" value="notificacion2" onchange="consultarDestinatariosMasivos()" class="rounded text-primary focus:ring-primary w-4 h-4">
+                            <span class="text-xs font-bold text-charcoal">Notificación 2</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2.5 bg-gray-50 hover:bg-gray-100/80 border border-gray-200 rounded-xl cursor-pointer transition select-none">
+                            <input type="checkbox" name="chk-estado-masivo" value="notificacion3" onchange="consultarDestinatariosMasivos()" class="rounded text-primary focus:ring-primary w-4 h-4">
+                            <span class="text-xs font-bold text-charcoal">Notificación 3</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2.5 bg-gray-50 hover:bg-gray-100/80 border border-gray-200 rounded-xl cursor-pointer transition select-none">
+                            <input type="checkbox" name="chk-estado-masivo" value="rechazado" onchange="consultarDestinatariosMasivos()" class="rounded text-primary focus:ring-primary w-4 h-4">
+                            <span class="text-xs font-bold text-charcoal">Rechazado</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2.5 bg-gray-50 hover:bg-gray-100/80 border border-gray-200 rounded-xl cursor-pointer transition select-none">
+                            <input type="checkbox" name="chk-estado-masivo" value="aceptado" onchange="consultarDestinatariosMasivos()" class="rounded text-primary focus:ring-primary w-4 h-4">
+                            <span class="text-xs font-bold text-charcoal">Aceptado</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 4. Resumen de Destinatarios y Previsualización -->
+                <div class="bg-amber-50/50 border border-amber-200/80 p-4 rounded-xl space-y-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-primary text-charcoal flex items-center justify-center font-black text-sm shrink-0 shadow-2xs">
+                                <span class="material-symbols-outlined text-[20px]">groups</span>
+                            </div>
+                            <div>
+                                <span class="text-[11px] font-bold text-gray-500 uppercase tracking-wide">Total Destinatarios Encontrados</span>
+                                <div id="resumen-conteo-destinatarios" class="text-base font-extrabold text-charcoal">
+                                    <span id="conteo-destinatarios-numero" class="text-lg text-emerald-700">0</span> clientes listos para recibir notificación
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="alternarListaPreviewDestinatarios()" id="btn-toggle-preview-destinatarios" class="px-3 py-2 bg-white hover:bg-gray-100 border border-gray-200 rounded-xl text-xs font-bold text-charcoal flex items-center gap-1.5 transition cursor-pointer shadow-2xs">
+                                <span class="material-symbols-outlined text-[16px]">visibility</span>
+                                <span id="texto-toggle-preview">Ver detalles</span>
+                            </button>
+                            <button type="button" onclick="consultarDestinatariosMasivos()" class="p-2 bg-white hover:bg-gray-100 border border-gray-200 rounded-xl text-gray-600 transition cursor-pointer shadow-2xs" title="Actualizar conteo">
+                                <span class="material-symbols-outlined text-[18px]">refresh</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Lista Desplegable de Destinatarios -->
+                    <div id="contenedor-tabla-preview-destinatarios" class="hidden pt-3 border-t border-amber-200/60">
+                        <div class="max-h-56 overflow-y-auto rounded-xl border border-gray-200 bg-white">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-gray-50 text-gray-500 font-bold border-b border-gray-200 sticky top-0">
+                                    <tr>
+                                        <th class="p-2.5">Cliente</th>
+                                        <th class="p-2.5">Teléfono</th>
+                                        <th class="p-2.5">Fecha Evento</th>
+                                        <th class="p-2.5">Estado</th>
+                                        <th class="p-2.5">Ruta / Sucursal</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-destinatarios-masivos" class="divide-y divide-gray-100">
+                                    <!-- Se llena con JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. Botón de Ejecución -->
+                <div class="pt-2 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <p class="text-xs text-gray-500 font-medium">Al enviar, los mensajes saldrán a través del WhatsApp oficial de Chatwoot y los eventos pasarán al siguiente estado.</p>
+                    <button onclick="confirmarYEjecutarEnvioMasivo()" id="btn-ejecutar-envio-masivo" class="w-full sm:w-auto bg-primary hover:bg-yellow-400 text-charcoal font-extrabold px-6 py-3 rounded-xl text-sm flex items-center justify-center gap-2 shadow-xs transition shrink-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span class="material-symbols-outlined text-[20px]">send</span>
+                        <span id="texto-boton-envio-masivo">Enviar Notificaciones</span>
+                    </button>
+                </div>
+
+                <!-- 6. Contenedor de Resultados del Envío Masivo -->
+                <div id="resultado-envio-masivo" class="hidden space-y-3">
+                    <!-- Se llena mediante JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- PESTAÑA: MENSAJES / CHATS WHATSAPP (CHATWOOT) -->
+    <!-- ========================================== -->
+    <div id="tab-mensajes" class="hidden-view space-y-4 max-w-5xl mx-auto pb-20 md:pb-6">
+        <!-- Cabecera y Barra de Búsqueda -->
+        <div class="bg-white border border-gray-200 p-5 sm:p-6 rounded-2xl shadow-xs space-y-4">
+            <div class="flex items-center gap-3.5">
+                <div class="w-12 h-12 bg-primary/20 text-charcoal rounded-2xl flex items-center justify-center shrink-0 shadow-2xs">
+                    <span class="material-symbols-outlined text-2xl">forum</span>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-charcoal leading-tight">Chats de WhatsApp</h2>
+                    <p class="text-xs text-gray-500 font-medium">Bandeja de conversaciones sincronizadas con Chatwoot</p>
+                </div>
+            </div>
+
+            <!-- Fila: Buscador (sin lupa, con padding generoso) + Botón Actualizar a la derecha -->
+            <div class="flex items-center gap-3 w-full">
+                <div class="flex-1 min-w-0">
+                    <input id="input-buscar-conversacion" type="text" oninput="alBuscarConversacion()" placeholder="Buscar conversación por nombre de cliente, teléfono, sucursal o mensaje..." style="height: 48px; padding-left: 20px; padding-right: 20px;" class="w-full bg-gray-50/80 border border-gray-200 rounded-xl text-sm font-semibold text-charcoal outline-none focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20 transition placeholder:text-gray-400 placeholder:font-normal shadow-2xs">
+                </div>
+                <button onclick="recargarListaConversaciones()" style="height: 48px; padding-left: 20px; padding-right: 20px;" class="flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl text-xs font-bold text-charcoal transition shadow-2xs cursor-pointer shrink-0" title="Actualizar lista">
+                    <span class="material-symbols-outlined text-[20px]">refresh</span>
+                    <span>Actualizar</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Contenedor Lista de Chats -->
+        <div class="bg-white border border-gray-200 rounded-2xl shadow-xs overflow-hidden">
+            <div id="lista-conversaciones-chatwoot" class="divide-y divide-gray-100">
+                <!-- Se llena mediante JS mensajes.js -->
+            </div>
+        </div>
+
+        <!-- Botón Ver Más Chats -->
+        <div id="contenedor-ver-mas-chats" class="text-center pt-2">
+            <button id="btn-ver-mas-chats" onclick="cargarMasChats()" class="btn-secondary-main inline-flex items-center gap-2 text-xs font-bold py-2.5 px-6 shadow-xs">
+                <span class="material-symbols-outlined text-[18px]">expand_more</span>
+                <span>Ver más chats</span>
+            </button>
         </div>
     </div>
 </main>

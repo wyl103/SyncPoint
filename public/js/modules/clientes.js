@@ -82,9 +82,14 @@ async function cargarFiltrosDinamicos() {
         if (selectEstado) {
             selectEstado.innerHTML = `
                 <option value="todos">Todos los estados</option>
-                <option value="agendado">Agendado</option>
                 <option value="tentativa">Tentativa</option>
-                <option value="pendiente">Pendiente</option>
+                <option value="programado">Programada</option>
+                <option value="notificacion1">Notificación 1</option>
+                <option value="notificacion2">Notificación 2</option>
+                <option value="notificacion3">Notificación 3</option>
+                <option value="aceptada">Aceptada</option>
+                <option value="denegada">Rechazada</option>
+                <option value="agendado">Agendada</option>
                 <option value="completada">Completada</option>
                 <option value="cancelada">Cancelada</option>
             `;
@@ -220,7 +225,7 @@ async function cargarClientes(page = 1) {
                             </div>
                         </div>
 
-                        <div class="pt-2 border-t border-gray-100 flex items-center justify-between">
+                        <div class="pt-1 flex items-center justify-between">
                             <span class="text-[11px] font-bold text-gray-400">ID: #${cliente.id}</span>
                             <div class="flex items-center gap-2">
                                 <button onclick="abrirModalEditarCliente(${cliente.id})" class="btn-card-edit" title="Editar datos del cliente">

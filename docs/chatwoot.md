@@ -132,13 +132,32 @@ Envía un nuevo mensaje de texto o plantilla procesada a la conversación activa
 | Campo | Tipo | Requerido | Descripción |
 | :--- | :--- | :--- | :--- |
 | `conversation_id` | `int` / `string` | **Sí** | ID de la conversación en Chatwoot. |
-| `content` | `string` | **Sí** | Texto o mensaje a enviar al cliente. |
+| `content` | `string` | **Sí** | Texto o contenido procesado del mensaje a enviar al cliente. |
+| `template_params` | `object` | No (Requerido si 24h expiró) | Objeto con la estructura de plantilla oficial de WhatsApp (`name`, `category`, `language`, `processed_params`). |
 
-#### Ejemplo JSON Body
+#### Ejemplo JSON Body (Mensaje Regular)
 ```json
 {
   "conversation_id": 591,
   "content": "Hola Comidas Rápidas Samys, le recordamos que su recolección está programada para hoy."
+}
+```
+
+#### Ejemplo JSON Body (Plantilla Oficial WhatsApp / Fuera de Ventana 24h)
+```json
+{
+  "conversation_id": 591,
+  "content": "Hola Comidas Rápidas Samys, le recordamos que su recolección de aceite vegetal está programada para el día 2026-08-20 en la sucursal Ibagué principal.",
+  "template_params": {
+    "name": "recordatorio_recoleccion",
+    "category": "UTILITY",
+    "language": "es",
+    "processed_params": {
+      "cliente": "Comidas Rápidas Samys",
+      "fecha": "2026-08-20",
+      "sucursal": "Ibagué principal"
+    }
+  }
 }
 ```
 

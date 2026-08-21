@@ -31,6 +31,7 @@ function cambiarSubTabUsuario(subTab) {
         if (btnDirectorio) btnDirectorio.className = inactiveTextClass;
 
         cargarConfiguracionProgramacion();
+        inicializarEnvioMasivoNotificaciones();
     }
 }
 
@@ -365,6 +366,325 @@ async function guardarConfiguracionProgramacion(activo) {
     }
 }
 
+// =========================================================================
+// MÓDULO: ENVÍO MASIVO DE NOTIFICACIONES WHATSAPP DE EVENTOS
+// =========================================================================
+
+let cacheDestinatariosMasivos = [];
+let debounceTimerMasivo = null;
+
+/**
+ * Inicializar fechas por defecto (próximos 3 días) y consultar destinatarios
+ */
+function inicializarEnvioMasivoNotificaciones() {
+    const inputDesde = document.getElementById('masivo-fecha-desde');
+    const inputHasta = document.getElementById('masivo-fecha-hasta');
+
+    if (inputDesde && !inputDesde.value) {
+        const hoy = new Date();
+        inputDesde.value = hoy.toISOString().split('T')[0];
+    }
+
+    if (inputHasta && !inputHasta.value) {
+        const hoy = new Date();
+        hoy.setDate(hoy.getDate() + 2); // 3 días en total (hoy + 2)
+        inputHasta.value = hoy.toISOString().split('T')[0];
+    }
+
+    actualizarVistaPreviaPlantillaMasiva();
+    consultarDestinatariosMasivos();
+}
+
+/**
+ * Establecer rangos de fechas rápidos ('hoy', 'manana', 'proximos3')
+ */
+function establecerRangoFechasMasivo(tipo) {
+    const inputDesde = document.getElementById('masivo-fecha-desde');
+    const inputHasta = document.getElementById('masivo-fecha-hasta');
+    if (!inputDesde || !inputHasta) return;
+
+    const ahora = new Date();
+    const hoyIso = ahora.toISOString().split('T')[0];
+
+    if (tipo === 'hoy') {
+        inputDesde.value = hoyIso;
+        inputHasta.value = hoyIso;
+    } else if (tipo === 'manana') {
+        const manana = new Date(ahora);
+        manana.setDate(manana.getDate() + 1);
+        const mananaIso = manana.toISOString().split('T')[0];
+        inputDesde.value = mananaIso;
+        inputHasta.value = mananaIso;
+    } else if (tipo === 'proximos3') {
+        const hasta = new Date(ahora);
+        hasta.setDate(hasta.getDate() + 2);
+        inputDesde.value = hoyIso;
+        inputHasta.value = hasta.toISOString().split('T')[0];
+    }
+
+    consultarDestinatariosMasivos();
+}
+
+/**
+ * Marcar o desmarcar todos los checkboxes de estados
+ */
+function marcarTodosEstadosMasivos(marcar) {
+    const checks = document.querySelectorAll('input[name="chk-estado-masivo"]');
+    checks.forEach(chk => {
+        chk.checked = !!marcar;
+    });
+    consultarDestinatariosMasivos();
+}
+
+/**
+ * Actualizar texto de vista previa según la plantilla seleccionada
+ */
+function actualizarVistaPreviaPlantillaMasiva() {
+    const select = document.getElementById('select-plantilla-masiva');
+    const previewTexto = document.getElementById('preview-plantilla-masiva-texto');
+    if (!select || !previewTexto) return;
+
+    const val = select.value;
+    if (val === 'confirmacion_entrega') {
+        previewTexto.innerHTML = `"Hola <strong>[Nombre Cliente]</strong>, te escribimos de OilBless (GreenFuel) para confirmar tu servicio del día <strong>[Fecha Programada]</strong>. 🚛♻️<br><br>¿Podemos pasar a retirar el aceite usado en esa fecha?"`;
+    } else if (val === 'hola_oilbless') {
+        previewTexto.innerHTML = `"¡Hola <strong>[Nombre Cliente]</strong>! Bienvenido a nuestro canal oficial de WhatsApp de OilBless (GreenFuel). 🚛♻️"`;
+    } else if (val === 'hello_world') {
+        previewTexto.innerHTML = `"Hello World"`;
+    } else {
+        previewTexto.innerHTML = `"Notificación de servicio OilBless para <strong>[Nombre Cliente]</strong> el día <strong>[Fecha Programada]</strong>."`;
+    }
+}
+
+/**
+ * Consultar en el backend cuántos clientes/eventos cumplen con los filtros
+ */
+function consultarDestinatariosMasivos() {
+    clearTimeout(debounceTimerMasivo);
+    debounceTimerMasivo = setTimeout(async () => {
+        const inputDesde = document.getElementById('masivo-fecha-desde');
+        const inputHasta = document.getElementById('masivo-fecha-hasta');
+        const numBadge = document.getElementById('conteo-destinatarios-numero');
+        const btnEnviar = document.getElementById('btn-ejecutar-envio-masivo');
+        const txtBtnEnviar = document.getElementById('texto-boton-envio-masivo');
+        const tbody = document.getElementById('tbody-destinatarios-masivos');
+
+        const fechaDesde = inputDesde ? inputDesde.value : '';
+        const fechaHasta = inputHasta ? inputHasta.value : '';
+
+        const checks = document.querySelectorAll('input[name="chk-estado-masivo"]:checked');
+        const estados = Array.from(checks).map(c => c.value);
+
+        if (!fechaDesde || !fechaHasta || estados.length === 0) {
+            if (numBadge) numBadge.innerText = '0';
+            if (txtBtnEnviar) txtBtnEnviar.innerText = 'Enviar Notificaciones a 0 Clientes';
+            if (btnEnviar) btnEnviar.disabled = true;
+            if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400 font-medium italic">Selecciona al menos una fecha y un estado para consultar destinatarios.</td></tr>`;
+            cacheDestinatariosMasivos = [];
+            return;
+        }
+
+        if (numBadge) numBadge.innerHTML = `<span class="inline-block animate-pulse text-gray-400">Consultando...</span>`;
+
+        try {
+            const queryParams = new URLSearchParams({
+                fecha_desde: fechaDesde,
+                fecha_hasta: fechaHasta,
+                estados: estados.join(',')
+            });
+
+            const response = await fetch(`${API_BASE}/eventos/envio_masivo.php?${queryParams.toString()}`);
+            const result = await response.json();
+
+            if (result.success && Array.isArray(result.eventos)) {
+                cacheDestinatariosMasivos = result.eventos;
+                const total = cacheDestinatariosMasivos.length;
+
+                if (numBadge) numBadge.innerText = total;
+                if (txtBtnEnviar) txtBtnEnviar.innerText = `Enviar Notificaciones a los ${total} Clientes`;
+                if (btnEnviar) btnEnviar.disabled = (total === 0);
+
+                renderizarTablaDestinatariosMasivos(cacheDestinatariosMasivos);
+            } else {
+                if (numBadge) numBadge.innerText = '0';
+                if (txtBtnEnviar) txtBtnEnviar.innerText = 'Enviar Notificaciones';
+                if (btnEnviar) btnEnviar.disabled = true;
+                if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-500 font-medium">${result.message || 'Error al consultar destinatarios.'}</td></tr>`;
+            }
+        } catch (err) {
+            console.error("Error consultando destinatarios:", err);
+            if (numBadge) numBadge.innerText = '0';
+            if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-500 font-medium">Error de conexión al consultar destinatarios.</td></tr>`;
+        }
+    }, 250);
+}
+
+/**
+ * Renderiza la lista de preview de destinatarios
+ */
+function renderizarTablaDestinatariosMasivos(eventos) {
+    const tbody = document.getElementById('tbody-destinatarios-masivos');
+    if (!tbody) return;
+
+    if (eventos.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400 font-medium italic">No se encontraron eventos programados para las fechas y estados seleccionados.</td></tr>`;
+        return;
+    }
+
+    const stateStyles = {
+        aceptado: 'bg-emerald-50 text-emerald-700 border-emerald-300 font-bold',
+        aceptada: 'bg-emerald-50 text-emerald-700 border-emerald-300 font-bold',
+        rechazado: 'bg-red-50 text-red-700 border-red-300 font-bold',
+        rechazada: 'bg-red-50 text-red-700 border-red-300 font-bold',
+        denegada: 'bg-red-50 text-red-700 border-red-300 font-bold'
+    };
+
+    tbody.innerHTML = eventos.map(ev => {
+        const est = (ev.estado || '').toLowerCase();
+        const stClass = stateStyles[est] || 'bg-transparent text-charcoal border-charcoal font-bold';
+        return `
+            <tr class="hover:bg-gray-50/80 transition">
+                <td class="p-2.5 font-bold text-charcoal">${escapeHtml(ev.cliente_nombre)}</td>
+                <td class="p-2.5 font-mono text-gray-600">${escapeHtml(ev.cliente_telefono || 'Sin teléfono')}</td>
+                <td class="p-2.5 font-semibold text-charcoal">${ev.fecha_programada}</td>
+                <td class="p-2.5">
+                    <span class="px-2 py-0.5 rounded-md text-[10.5px] font-bold border ${stClass}">
+                        ${escapeHtml(ev.estado)}
+                    </span>
+                </td>
+                <td class="p-2.5 text-gray-500 font-medium">
+                    ${escapeHtml(ev.ruta_nombre || 'N/A')} <span class="text-gray-300">/</span> ${escapeHtml(ev.sucursal_nombre || 'N/A')}
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+/**
+ * Alternar visibilidad de la tabla de detalles
+ */
+function alternarListaPreviewDestinatarios() {
+    const cont = document.getElementById('contenedor-tabla-preview-destinatarios');
+    const txt = document.getElementById('texto-toggle-preview');
+    if (!cont) return;
+
+    if (cont.classList.contains('hidden')) {
+        cont.classList.remove('hidden');
+        if (txt) txt.innerText = 'Ocultar detalles';
+    } else {
+        cont.classList.add('hidden');
+        if (txt) txt.innerText = 'Ver detalles';
+    }
+}
+
+/**
+ * Confirmar y ejecutar el envío masivo
+ */
+async function confirmarYEjecutarEnvioMasivo() {
+    if (!cacheDestinatariosMasivos || cacheDestinatariosMasivos.length === 0) {
+        alert("No hay destinatarios seleccionados para enviar notificaciones.");
+        return;
+    }
+
+    const total = cacheDestinatariosMasivos.length;
+    const select = document.getElementById('select-plantilla-masiva');
+    const plantillaId = select ? select.value : 'confirmacion_entrega';
+
+    const confirmar = confirm(`¿Estás seguro de enviar la notificación por WhatsApp a los ${total} clientes seleccionados?\n\nPlantilla: ${plantillaId}\n\nLos eventos se actualizarán automáticamente.`);
+    if (!confirmar) return;
+
+    const btn = document.getElementById('btn-ejecutar-envio-masivo');
+    const resContainer = document.getElementById('resultado-envio-masivo');
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="material-symbols-outlined text-[20px] animate-spin">progress_activity</span> Enviando notificaciones...`;
+    }
+
+    if (resContainer) {
+        resContainer.classList.remove('hidden');
+        resContainer.innerHTML = `
+            <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-xl text-yellow-800 text-xs font-semibold flex items-center gap-2">
+                <span class="material-symbols-outlined text-lg animate-spin">progress_activity</span>
+                Procesando envío masivo a ${total} destinatarios a través de WhatsApp Cloud API...
+            </div>
+        `;
+    }
+
+    const inputDesde = document.getElementById('masivo-fecha-desde');
+    const inputHasta = document.getElementById('masivo-fecha-hasta');
+    const checks = document.querySelectorAll('input[name="chk-estado-masivo"]:checked');
+    const estados = Array.from(checks).map(c => c.value);
+
+    try {
+        const payload = {
+            fecha_desde: inputDesde ? inputDesde.value : '',
+            fecha_hasta: inputHasta ? inputHasta.value : '',
+            estados: estados,
+            plantilla_id: plantillaId
+        };
+
+        const response = await fetch(`${API_BASE}/eventos/envio_masivo.php`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            resContainer.innerHTML = `
+                <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-sm flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-emerald-600 text-lg">check_circle</span> Envío Masivo Finalizado
+                        </span>
+                        <span class="text-[11px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-md">Plantilla: ${result.plantilla_usada}</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs pt-1 border-t border-emerald-200/60 font-bold">
+                        <div>Total Procesados: <strong class="text-charcoal">${result.total}</strong></div>
+                        <div>Enviados Exitosos: <strong class="text-emerald-600">${result.enviados}</strong></div>
+                        <div>Fallidos: <strong class="text-red-600">${result.fallidos}</strong></div>
+                    </div>
+                    ${result.detalles && result.detalles.length > 0 ? `
+                        <div class="pt-2 text-[11px] text-emerald-800 font-medium">
+                            Los eventos han sido actualizados con éxito en el sistema.
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            // Recargar conteo de destinatarios
+            consultarDestinatariosMasivos();
+        } else {
+            resContainer.innerHTML = `
+                <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-semibold">
+                    ${result.message || 'Error al ejecutar el envío masivo.'}
+                </div>
+            `;
+        }
+    } catch (err) {
+        console.error("Error en envío masivo:", err);
+        if (resContainer) {
+            resContainer.innerHTML = `
+                <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-semibold">
+                    Error de conexión al procesar el envío masivo.
+                </div>
+            `;
+        }
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<span class="material-symbols-outlined text-[20px]">send</span> <span id="texto-boton-envio-masivo">Enviar Notificaciones</span>`;
+        }
+    }
+}
+
+// Helper para escapar HTML
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 // Exponer en objeto Window
 window.cambiarSubTabUsuario = cambiarSubTabUsuario;
 window.cargarUsuarios = cargarUsuarios;
@@ -377,3 +697,10 @@ window.eliminarUsuario = eliminarUsuario;
 window.ejecutarProgramacionGlobalEventos = ejecutarProgramacionGlobalEventos;
 window.cargarConfiguracionProgramacion = cargarConfiguracionProgramacion;
 window.guardarConfiguracionProgramacion = guardarConfiguracionProgramacion;
+window.inicializarEnvioMasivoNotificaciones = inicializarEnvioMasivoNotificaciones;
+window.establecerRangoFechasMasivo = establecerRangoFechasMasivo;
+window.marcarTodosEstadosMasivos = marcarTodosEstadosMasivos;
+window.actualizarVistaPreviaPlantillaMasiva = actualizarVistaPreviaPlantillaMasiva;
+window.consultarDestinatariosMasivos = consultarDestinatariosMasivos;
+window.alternarListaPreviewDestinatarios = alternarListaPreviewDestinatarios;
+window.confirmarYEjecutarEnvioMasivo = confirmarYEjecutarEnvioMasivo;

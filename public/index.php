@@ -61,26 +61,27 @@ require_once __DIR__ . '/../app/views/auth/login.php';
 
         <?php require_once __DIR__ . '/../app/views/dashboard/main.php'; ?>
 
-        <nav class="md:hidden bg-white border-t border-gray-200 py-2.5 px-2 flex justify-around items-center z-50 fixed bottom-0 left-0 right-0 w-full shadow-[0_-4px_12px_rgba(0,0,0,0.08)]">
+        <nav class="md:hidden bg-white border-t border-gray-200 py-2 px-1 flex justify-around items-center z-50 fixed bottom-0 left-0 right-0 w-full shadow-[0_-4px_12px_rgba(0,0,0,0.08)]">
             <button onclick="switchTab('dashboard')" class="nav-btn flex-1 flex flex-col items-center justify-center gap-1 text-charcoal cursor-pointer" data-target="dashboard">
-                <span class="material-symbols-outlined text-[22px] filled">event</span>
-                <span class="text-[10px] font-bold">Eventos</span>
+                <span class="material-symbols-outlined text-[20px] filled">event</span>
+                <span class="text-[9.5px] font-bold">Eventos</span>
             </button>
             <button onclick="switchTab('clientes'); if(typeof cambiarSubTabCliente === 'function') cambiarSubTabCliente('directorio');" class="nav-btn flex-1 flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-charcoal cursor-pointer" data-target="clientes">
-                <span class="material-symbols-outlined text-[22px]">group</span>
-                <span class="text-[10px] font-bold">Clientes</span>
+                <span class="material-symbols-outlined text-[20px]">group</span>
+                <span class="text-[9.5px] font-bold">Clientes</span>
             </button>
-            <button onclick="switchTab('clientes'); if(typeof cambiarSubTabCliente === 'function') cambiarSubTabCliente('sucursales-rutas');" class="nav-btn flex-1 flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-charcoal cursor-pointer" data-target="sucursales-rutas">
-                <span class="material-symbols-outlined text-[22px]">route</span>
-                <span class="text-[10px] font-bold">Rutas</span>
+            <button onclick="switchTab('mensajes')" class="nav-btn flex-1 flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-charcoal cursor-pointer relative" data-target="mensajes">
+                <span class="material-symbols-outlined text-[20px]">forum</span>
+                <span class="text-[9.5px] font-bold">Mensajes</span>
+                <span id="badge-nav-mensajes-mobile" style="width: 16px; height: 16px; min-width: 16px; min-height: 16px; border-radius: 50%; display: none; align-items: center; justify-content: center; line-height: 1; padding: 0;" class="absolute top-0.5 right-3 sm:right-6 bg-primary text-charcoal text-[9px] font-black shadow-xs">0</span>
             </button>
             <button onclick="switchTab('usuarios'); if(typeof cambiarSubTabUsuario === 'function') cambiarSubTabUsuario('directorio');" class="nav-btn flex-1 flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-charcoal cursor-pointer" data-target="usuarios">
-                <span class="material-symbols-outlined text-[22px]">settings</span>
-                <span class="text-[10px] font-bold">Configuración</span>
+                <span class="material-symbols-outlined text-[20px]">settings</span>
+                <span class="text-[9.5px] font-bold">Ajustes</span>
             </button>
             <button id="btn-logout-mobile" class="nav-btn flex-1 flex flex-col items-center justify-center gap-1 text-red-500 hover:text-red-600 cursor-pointer">
-                <span class="material-symbols-outlined text-[22px]">logout</span>
-                <span class="text-[10px] font-bold">Salir</span>
+                <span class="material-symbols-outlined text-[20px]">logout</span>
+                <span class="text-[9.5px] font-bold">Salir</span>
             </button>
         </nav>
     </div>
@@ -98,7 +99,7 @@ require_once __DIR__ . '/../app/views/layout/modals.php';
 <script src="js/modules/sucursales_rutas.js"></script>
 <script src="js/modules/usuarios.js"></script>
 <script src="js/modules/chatwoot.js"></script>
+<script src="js/modules/mensajes.js"></script>
 <script src="js/app.js"></script>
-
 </body>
 </html>

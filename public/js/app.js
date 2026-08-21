@@ -13,7 +13,7 @@ const API_BASE = `${APP_ROOT}/app/api`;
 
 // --- NAVEGACIÓN PRINCIPAL ENTRE PESTAÑAS ---
 function switchTab(tabId) {
-    ['tab-dashboard', 'tab-clientes', 'tab-usuarios'].forEach(id => {
+    ['tab-dashboard', 'tab-clientes', 'tab-usuarios', 'tab-mensajes'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.add('hidden-view');
     });
@@ -43,12 +43,31 @@ function switchTab(tabId) {
         } else if (typeof cargarUsuarios === 'function') {
             cargarUsuarios();
         }
+    } else if (tabId === 'mensajes') {
+        if (headerSubtabNav) headerSubtabNav.classList.add('hidden');
+        if (headerSubtabUsuariosNav) headerSubtabUsuariosNav.classList.add('hidden');
+        if (headerTitle) {
+            headerTitle.classList.remove('hidden');
+            headerTitle.innerText = 'Mensajes WhatsApp';
+        }
+        if (typeof cargarConversaciones === 'function') {
+            cargarConversaciones(1);
+        }
+        if (typeof iniciarPollingBandejaMensajes === 'function') {
+            iniciarPollingBandejaMensajes();
+        }
     } else {
+        if (typeof detenerPollingBandejaMensajes === 'function') {
+            detenerPollingBandejaMensajes();
+        }
         if (headerSubtabNav) headerSubtabNav.classList.add('hidden');
         if (headerSubtabUsuariosNav) headerSubtabUsuariosNav.classList.add('hidden');
         if (headerTitle) {
             headerTitle.classList.remove('hidden');
             headerTitle.innerText = tabId === 'dashboard' ? 'Eventos' : 'OilBless';
+        }
+        if (tabId === 'dashboard' && typeof recargarDiaActual === 'function') {
+            recargarDiaActual();
         }
     }
 
@@ -72,4 +91,7 @@ function switchTab(tabId) {
 function initApp() {
     cargarFiltrosDinamicos();
     setupBotonesDias();
+    if (typeof iniciarPollingGlobalNuevosMensajes === 'function') {
+        iniciarPollingGlobalNuevosMensajes();
+    }
 }

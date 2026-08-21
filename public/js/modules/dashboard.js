@@ -6,36 +6,39 @@ let mesActual = new Date();
 
 function obtenerBadgeEstado(estado, esTentativa) {
     if (esTentativa || estado === 'tentativa') {
-        return { text: 'TENTATIVA', class: 'bg-blue-50 text-blue-700 border-blue-200' };
+        return { text: 'TENTATIVA', class: 'bg-transparent text-charcoal border-charcoal font-bold' };
     }
 
     const est = (estado || 'programada').toLowerCase();
 
     switch (est) {
+        case 'aceptado':
+        case 'aceptada':
+        case 'completada':
+            return { text: 'ACEPTADA', class: 'bg-emerald-50 text-emerald-700 border-emerald-300 font-bold' };
+        case 'rechazado':
+        case 'rechazada':
+        case 'denegada':
+            return { text: 'RECHAZADA', class: 'bg-red-50 text-red-700 border-red-300 font-bold' };
+        case 'consulta':
+            return { text: 'CONSULTA', class: 'bg-amber-100 text-amber-900 border-amber-400 font-extrabold shadow-2xs' };
+        case 'cancelada':
+        case 'error':
+            return { text: est.toUpperCase(), class: 'bg-red-50 text-red-700 border-red-300 font-bold' };
         case 'programado':
         case 'programada':
-            return { text: 'PROGRAMADA', class: 'bg-amber-50 text-amber-800 border-amber-200' };
+            return { text: 'PROGRAMADA', class: 'bg-transparent text-charcoal border-charcoal font-bold' };
         case 'notificacion1':
-            return { text: 'NOTIFICACIÓN 1', class: 'bg-sky-50 text-sky-800 border-sky-200' };
+            return { text: 'NOTIFICACIÓN 1', class: 'bg-transparent text-charcoal border-charcoal font-bold' };
         case 'notificacion2':
-            return { text: 'NOTIFICACIÓN 2', class: 'bg-indigo-50 text-indigo-800 border-indigo-200' };
+            return { text: 'NOTIFICACIÓN 2', class: 'bg-transparent text-charcoal border-charcoal font-bold' };
         case 'notificacion3':
-            return { text: 'NOTIFICACIÓN 3', class: 'bg-purple-50 text-purple-800 border-purple-200' };
-        case 'aceptada':
-            return { text: 'ACEPTADA', class: 'bg-emerald-50 text-emerald-800 border-emerald-200' };
-        case 'denegada':
-            return { text: 'DENEGADA', class: 'bg-rose-50 text-rose-800 border-rose-200' };
-        case 'error':
-            return { text: 'ERROR', class: 'bg-red-100 text-red-900 border-red-300' };
-        case 'completada':
-            return { text: 'COMPLETADA', class: 'bg-green-50 text-green-800 border-green-200' };
-        case 'cancelada':
-            return { text: 'CANCELADA', class: 'bg-red-50 text-red-800 border-red-200' };
+            return { text: 'NOTIFICACIÓN 3', class: 'bg-transparent text-charcoal border-charcoal font-bold' };
         case 'agendado':
         case 'agendada':
-            return { text: 'AGENDADA', class: 'bg-teal-50 text-teal-800 border-teal-200' };
+            return { text: 'AGENDADA', class: 'bg-transparent text-charcoal border-charcoal font-bold' };
         default:
-            return { text: est.toUpperCase(), class: 'bg-gray-100 text-gray-700 border-gray-200' };
+            return { text: est.toUpperCase(), class: 'bg-transparent text-charcoal border-charcoal font-bold' };
     }
 }
 
@@ -134,14 +137,19 @@ async function renderDia(fechaIso, titulo, btnElement) {
                 let esTentativa = rec.es_tentativa || rec.estado_recoleccion === 'tentativa';
                 let estadoValor = rec.estado_recoleccion || rec.estado || 'programada';
                 let badge = obtenerBadgeEstado(estadoValor, esTentativa);
+                let esConsulta = (estadoValor.toLowerCase() === 'consulta');
+                let blinkClass = esConsulta ? 'card-consulta-blink' : '';
 
                 grupoContainer.innerHTML += `
-                    <div class="bg-white border border-gray-200 p-4 rounded-2xl shadow-xs flex flex-col justify-between gap-3 hover:border-primary/70 transition">
+                    <div class="bg-white border border-gray-200 p-4 rounded-2xl shadow-xs flex flex-col justify-between gap-3 hover:border-primary/70 transition ${blinkClass}">
                         <!-- Sección Superior: Información del Cliente -->
                         <div class="cursor-pointer min-w-0" onclick="verDetallesRecoleccion(${rec.id || 'null'})">
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <h3 class="font-bold text-charcoal text-base truncate">${rec.cliente_nombre}</h3>
-                                ${rec.frecuencia_nombre ? `<span class="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md font-semibold shrink-0">${rec.frecuencia_nombre}</span>` : ''}
+                            <div class="flex items-center gap-2 flex-wrap justify-between">
+                                <div class="flex items-center gap-2 flex-wrap min-w-0">
+                                    <h3 class="font-bold text-charcoal text-base truncate">${rec.cliente_nombre}</h3>
+                                    ${rec.frecuencia_nombre ? `<span class="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md font-semibold shrink-0">${rec.frecuencia_nombre}</span>` : ''}
+                                </div>
+                                ${esConsulta ? `<span class="text-[11px] bg-amber-200 text-amber-900 font-black px-2 py-0.5 rounded-md flex items-center gap-1 shadow-2xs animate-pulse"><span class="material-symbols-outlined text-[14px]">mark_chat_unread</span> Requiere Respuesta</span>` : ''}
                             </div>
 
                             <!-- Estado con letras pequeñas y elegantes debajo del nombre -->
@@ -169,7 +177,7 @@ async function renderDia(fechaIso, titulo, btnElement) {
                                     <span>Agendar</span>
                                 </button>` : ''}
                                 ${rec.cliente_id ? `
-                                <button onclick="abrirModalChatwoot(${rec.cliente_id}, '${(rec.cliente_nombre || '').replace(/'/g, "\\'")}')" class="p-1.5 rounded-lg bg-gray-100 hover:bg-primary/20 text-charcoal transition shrink-0" title="Abrir Chat de WhatsApp">
+                                <button onclick="abrirModalChatwoot(${rec.cliente_id}, '${(rec.cliente_nombre || '').replace(/'/g, "\\'")}')" class="p-1.5 rounded-lg ${esConsulta ? 'bg-primary text-charcoal ring-2 ring-amber-500 font-bold' : 'bg-gray-100 hover:bg-primary/20 text-charcoal'} transition shrink-0" title="Abrir Chat de WhatsApp">
                                     <span class="material-symbols-outlined text-[18px]">forum</span>
                                 </button>` : ''}
                             </div>
@@ -312,8 +320,12 @@ function verDetallesRecoleccion(id) {
 }
 
 function recargarDiaActual() {
-    const btnActivo = document.querySelector('.btn-dia-tab.bg-white');
-    renderDia(fechaActualIso, tituloActual, btnActivo);
+    if (!fechaActualIso) {
+        fechaActualIso = formatLocalIso(new Date());
+        tituloActual = 'Hoy';
+    }
+    const btnActivo = document.querySelector('.btn-dia-tab.bg-white') || document.querySelector('.btn-dia-tab');
+    renderDia(fechaActualIso, tituloActual || 'Hoy', btnActivo);
 }
 
 function descargarExcel() {
