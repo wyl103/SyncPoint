@@ -47,8 +47,9 @@ class Usuario {
                         u.nombre,
                         u.correo,
                         COALESCE(u.tipo, 'normal') AS tipo,
-                        u.created_at"
-                 . $whereSql . " ORDER BY u.id DESC LIMIT :limit OFFSET :offset";
+                        u.fecha_creacion,
+                        u.fecha_creacion AS created_at"
+                 . $whereSql . " ORDER BY u.fecha_creacion DESC NULLS LAST LIMIT :limit OFFSET :offset";
 
         $stmtData = $this->pdo->prepare($dataSql);
         foreach ($params as $key => $val) {
@@ -69,7 +70,7 @@ class Usuario {
     }
 
     public function getById($id) {
-        $sql = "SELECT id, nombre, correo, COALESCE(tipo, 'normal') AS tipo, created_at FROM usuarios WHERE id = :id";
+        $sql = "SELECT id, nombre, correo, COALESCE(tipo, 'normal') AS tipo, fecha_creacion, fecha_creacion AS created_at FROM usuarios WHERE id = :id";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['id' => $id]);
         return $stmt->fetch();
@@ -93,10 +94,10 @@ class Usuario {
         $tipoValidado = self::validarTipo($tipo);
         $correoLwr = strtolower(trim($correo));
 
-        // 1. Intentar inserción estándar (para tablas con id bigint autoincremental o DEFAULT)
+        // 1. Intentar inserción estándar (para tablas con id autoincremental o DEFAULT)
         try {
-            $sql = "INSERT INTO usuarios (nombre, correo, clave, tipo, created_at) 
-                    VALUES (:nombre, :correo, :clave, :tipo, CURRENT_DATE) 
+            $sql = "INSERT INTO usuarios (nombre, correo, clave, tipo, fecha_creacion) 
+                    VALUES (:nombre, :correo, :clave, :tipo, CURRENT_TIMESTAMP) 
                     RETURNING id";
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([
@@ -125,8 +126,8 @@ class Usuario {
                 // 2. Si falla por not-null constraint en 'id' (ej. columna bpchar / uuid sin DEFAULT sequence)
                 $uuid = self::generateUuid();
                 try {
-                    $sql = "INSERT INTO usuarios (id, nombre, correo, clave, tipo, created_at) 
-                            VALUES (:id, :nombre, :correo, :clave, :tipo, CURRENT_DATE) 
+                    $sql = "INSERT INTO usuarios (id, nombre, correo, clave, tipo, fecha_creacion) 
+                            VALUES (:id, :nombre, :correo, :clave, :tipo, CURRENT_TIMESTAMP) 
                             RETURNING id";
                     $stmt = $this->pdo->prepare($sql);
                     $stmt->execute([

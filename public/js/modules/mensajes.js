@@ -271,73 +271,77 @@ function renderizarListaConversaciones(conversaciones) {
 
         // Ícono de estado de la ventana 24h debajo del nombre (Círculo perfecto, solo ícono, sin texto)
         const badge24hIcon = !conv.is_24h_expired
-            ? `<span style="width: 18px; height: 18px; min-width: 18px; min-height: 18px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;" class="bg-emerald-100 text-emerald-700 shrink-0 shadow-2xs" title="Ventana 24h activa (chat libre)">
-                 <span class="material-symbols-outlined text-[12px] font-bold">check</span>
+            ? `<span style="width: 17px; height: 17px; min-width: 17px; min-height: 17px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;" class="bg-emerald-100 text-emerald-700 shadow-2xs" title="Ventana 24h activa (chat libre)">
+                 <span class="material-symbols-outlined text-[11px] font-bold" style="font-size: 11px;">check</span>
                </span>`
-            : `<span style="width: 18px; height: 18px; min-width: 18px; min-height: 18px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;" class="bg-amber-100 text-amber-800 shrink-0 shadow-2xs" title="Ventana 24h expirada (requiere plantilla)">
-                 <span class="material-symbols-outlined text-[12px] font-black">priority_high</span>
+            : `<span style="width: 17px; height: 17px; min-width: 17px; min-height: 17px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;" class="bg-amber-100 text-amber-800 shadow-2xs" title="Ventana 24h expirada (requiere plantilla)">
+                 <span class="material-symbols-outlined text-[11px] font-black" style="font-size: 11px;">priority_high</span>
                </span>`;
-
-        // Círculo perfecto amarillo para mensajes no leídos: SOLO si el último mensaje es del cliente y unread_count > 0
-        let badgeUnread = '';
-        if (isIncoming && unreadCount > 0) {
-            badgeUnread = `<span style="width: 22px; height: 22px; min-width: 22px; min-height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; line-height: 1; padding: 0;" class="bg-primary text-charcoal text-[11px] font-black shadow-xs shrink-0">${unreadCount}</span>`;
-        }
-
-        // Ícono de confirmación para mensajes salientes
-        let iconoMsg = '';
-        if (isOutgoing) {
-            iconoMsg = `<span class="material-symbols-outlined text-[15px] text-primary shrink-0 align-middle">done_all</span>`;
-        }
-
-        // Tags de sucursal y ruta
-        let tagsHtml = '';
-        if (conv.sucursal_nombre) {
-            tagsHtml += `<span class="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-0.5 rounded-md truncate max-w-[120px]">${conv.sucursal_nombre}</span>`;
-        }
-        if (conv.ruta_nombre) {
-            tagsHtml += `<span class="bg-yellow-50 text-amber-800 border border-yellow-200 text-[10px] font-bold px-2 py-0.5 rounded-md truncate max-w-[120px]">Ruta: ${conv.ruta_nombre}</span>`;
-        }
 
         const safeNombre = escapeHtml(nombre);
         const safeTel = escapeHtml(telefono);
 
+        // Limpiar mensaje a 1 sola línea y limitar caracteres como red de seguridad
+        let rawMsg = (conv.ultimo_mensaje || '').replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim() || 'Sin mensajes recientes';
+        let previewMsg = rawMsg.length > 70 ? rawMsg.substring(0, 70) + '...' : rawMsg;
+
+        // Tags de sucursal y ruta (Ruta solo visible en PC/Tablet)
+        let tagsHtml = '';
+        if (conv.sucursal_nombre) {
+            tagsHtml += `<span class="chat-badge-sucursal">${escapeHtml(conv.sucursal_nombre)}</span>`;
+        }
+        if (conv.ruta_nombre) {
+            tagsHtml += `<span class="chat-badge-ruta chat-badge-ruta-desktop">Ruta: ${escapeHtml(conv.ruta_nombre)}</span>`;
+        }
+
+        // Ícono de estado en la columna derecha (debajo de la fecha):
+        // 1. Si el último mensaje es saliente: chulitos de enviado
+        // 2. Si el mensaje es entrante no leído: badge con número
+        let statusIconRight = '';
+        if (isOutgoing) {
+            statusIconRight = `<span class="material-symbols-outlined" style="font-size: 16px; color: #f59e0b; line-height: 1;" title="Enviado">done_all</span>`;
+        } else if (isIncoming && unreadCount > 0) {
+            statusIconRight = `<span style="width: 18px; height: 18px; min-width: 18px; min-height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; line-height: 1; padding: 0; background-color: #facc14; color: #2d3436; font-size: 10px; font-weight: 900; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">${unreadCount}</span>`;
+        }
+
+        const tagsRowHtml = tagsHtml ? `<div class="chat-item-tags-row">${tagsHtml}</div>` : '';
+
         listEl.innerHTML += `
             <div onclick="abrirChatDesdeLista(${conv.conversation_id}, ${conv.cliente_id || 'null'}, '${safeNombre.replace(/'/g, "\\'")}', '${safeTel.replace(/'/g, "\\'")}')" 
-                 class="p-4 hover:bg-yellow-50/50 transition cursor-pointer flex items-center justify-between gap-4">
+                 class="chat-item-row">
                 
-                <!-- Izquierda: Avatar y Contenido -->
-                <div class="flex items-center gap-3.5 min-w-0 flex-1">
-                    <div class="relative shrink-0">
-                        <div class="w-12 h-12 rounded-full bg-primary/20 text-charcoal font-black flex items-center justify-center text-base shadow-2xs">
-                            ${nombre.charAt(0).toUpperCase()}
-                        </div>
-                        <span class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full"></span>
+                <!-- Avatar Circular -->
+                <div class="chat-item-avatar-wrapper">
+                    <div class="chat-item-avatar">
+                        ${nombre.charAt(0).toUpperCase()}
+                    </div>
+                    <span class="chat-item-online-dot"></span>
+                </div>
+
+                <!-- Cuerpo Central: Nombre, Sucursal/Ruta y Previsualización de 1 Línea -->
+                <div class="chat-item-body">
+                    <!-- Fila 1: Nombre con ellipsis + ID (solo en PC) -->
+                    <div class="chat-item-title-row">
+                        <span class="chat-item-name" title="${safeNombre}">${safeNombre}</span>
+                        <span class="chat-item-conv-id chat-item-conv-id-desktop">#${conv.conversation_id}</span>
                     </div>
 
-                    <div class="min-w-0 flex-1 space-y-1">
-                        <!-- Fila Superior: Nombre, ID, Sucursal y Ruta -->
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <h4 class="text-sm font-bold text-charcoal truncate">${safeNombre}</h4>
-                            <span class="text-[11px] font-semibold text-gray-400">#${conv.conversation_id}</span>
-                            ${tagsHtml}
-                        </div>
+                    <!-- Fila 2: Sucursal (móvil y PC) y Ruta (solo PC) -->
+                    ${tagsRowHtml}
 
-                        <!-- Fila Inferior: Ícono 24h (chulito o !) + Último Mensaje -->
-                        <div class="flex items-center gap-2 text-xs text-gray-500 font-medium truncate">
-                            ${badge24hIcon}
-                            <p class="flex items-center gap-1 truncate max-w-xl">
-                                ${iconoMsg}
-                                <span class="truncate">${escapeHtml(ultimoMsg)}</span>
-                            </p>
-                        </div>
+                    <!-- Fila 3: Ventana 24h + Mensaje estricto de 1 línea con ellipsis -->
+                    <div class="chat-item-message-preview">
+                        ${badge24hIcon}
+                        <span class="chat-item-message-text" title="${escapeHtml(rawMsg)}">${escapeHtml(previewMsg)}</span>
                     </div>
                 </div>
 
-                <!-- Derecha: Fecha y Círculo Unread (Sin flecha) -->
-                <div class="flex flex-col items-end gap-1.5 shrink-0">
-                    <span class="text-[11px] font-semibold text-gray-400">${fechaStr}</span>
-                    ${badgeUnread}
+                <!-- Columna Derecha: Hora pequeña y Chulitos/Unread debajo -->
+                <div class="chat-item-meta-right">
+                    <span class="chat-item-time">${fechaStr}</span>
+                    <div class="chat-item-status-icon">
+                        ${statusIconRight}
+                    </div>
                 </div>
             </div>
         `;
