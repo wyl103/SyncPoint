@@ -88,7 +88,7 @@ async function cargarFiltrosDinamicos() {
                 <option value="notificacion2">Notificación 2</option>
                 <option value="notificacion3">Notificación 3</option>
                 <option value="aceptada">Aceptada</option>
-                <option value="denegada">Rechazada</option>
+                <option value="denegada">Denegada</option>
                 <option value="agendado">Agendada</option>
                 <option value="completada">Completada</option>
                 <option value="cancelada">Cancelada</option>

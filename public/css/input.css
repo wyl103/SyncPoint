@@ -621,3 +621,50 @@ button {
   background-color: #eab308 !important;
   box-shadow: 0 3px 8px rgba(234, 179, 8, 0.3) !important;
 }
+
+/* --- BADGES Y CARDS POR ESTADO DE EVENTO --- */
+.badge-estado-aceptada {
+  background-color: #ecfdf5 !important;
+  color: #047857 !important;
+  border: 1px solid #a7f3d0 !important;
+  font-weight: 700 !important;
+}
+
+.badge-estado-denegada,
+.badge-estado-rechazada {
+  background-color: #fef2f2 !important;
+  color: #b91c1c !important;
+  border: 1px solid #fca5a5 !important;
+  font-weight: 700 !important;
+}
+
+.badge-estado-consulta {
+  background-color: #fef3c7 !important;
+  color: #78350f !important;
+  border: 1px solid #fcd34d !important;
+  font-weight: 800 !important;
+}
+
+.badge-estado-default {
+  background-color: transparent !important;
+  color: #2d3436 !important;
+  border: 1px solid #2d3436 !important;
+  font-weight: 700 !important;
+}
+
+/* Cards por Estado */
+.card-estado-aceptada {
+  background-color: #f0fdf4 !important;
+  border: 1.5px solid #10b981 !important;
+}
+
+.card-estado-denegada,
+.card-estado-rechazada {
+  background-color: #fef2f2 !important;
+  border: 1.5px solid #ef4444 !important;
+}
+
+.card-estado-default {
+  background-color: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+}
