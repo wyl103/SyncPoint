@@ -8,6 +8,8 @@ class ChatwootService {
     private $baseUrl;
     private $accountId;
     private $apiToken;
+    private $cutoffDate;
+    private $cutoffTimestamp;
     private $pdo;
 
     public function __construct() {
@@ -22,8 +24,30 @@ class ChatwootService {
         $this->accountId = getenv('CHATWOOT_ACCOUNT_ID') ?: ($env['CHATWOOT_ACCOUNT_ID'] ?? '1');
         $this->apiToken   = getenv('CHATWOOT_API_TOKEN') ?: ($env['CHATWOOT_API_TOKEN'] ?? '');
 
+        // Fecha de corte para conversaciones y mensajes (por defecto 2026-08-21 00:00:00 en America/Bogota)
+        $this->cutoffDate = getenv('CHATWOOT_CUTOFF_DATE') ?: ($env['CHATWOOT_CUTOFF_DATE'] ?? '2026-08-21 00:00:00');
+        if (!empty($this->cutoffDate)) {
+            try {
+                $dt = new DateTime($this->cutoffDate, new DateTimeZone('America/Bogota'));
+                $this->cutoffTimestamp = $dt->getTimestamp();
+            } catch (Exception $e) {
+                $this->cutoffTimestamp = strtotime($this->cutoffDate) ?: 0;
+            }
+        } else {
+            $this->cutoffTimestamp = 0;
+        }
+
         $db = new Database();
         $this->pdo = $db->getConnection();
+    }
+
+    /**
+     * Helper para parsear timestamps numéricos o cadenas de fecha a entero UNIX
+     */
+    private function parseTimestamp($val) {
+        if (empty($val)) return 0;
+        if (is_numeric($val)) return (int)$val;
+        return (int)strtotime((string)$val);
     }
 
     /**
@@ -309,6 +333,25 @@ class ChatwootService {
             $payload = [];
         }
 
+        $rawPayloadCount = count($payload);
+        $hitCutoffBoundary = false;
+
+        // Filtrar por fecha de corte para excluir conversaciones previas al 21/08/2026 00:00:00
+        if ($this->cutoffTimestamp > 0) {
+            $filteredPayload = [];
+            foreach ($payload as $conv) {
+                $lastMsg = $conv['last_non_activity_message'] ?? ($conv['messages'][0] ?? null);
+                $lastMsgTime = $lastMsg['created_at'] ?? ($conv['last_activity_at'] ?? $conv['updated_at'] ?? null);
+                $ts = $this->parseTimestamp($lastMsgTime);
+                if ($ts >= $this->cutoffTimestamp) {
+                    $filteredPayload[] = $conv;
+                } else {
+                    $hitCutoffBoundary = true;
+                }
+            }
+            $payload = $filteredPayload;
+        }
+
         // Extraer teléfonos para hacer match en batch con la base de datos de clientes
         $telefonos = [];
         foreach ($payload as $conv) {
@@ -420,8 +463,8 @@ class ChatwootService {
             'conversations' => $formatedList,
             'meta' => [
                 'current_page' => (int)$page,
-                'has_more' => count($payload) >= 20,
-                'total_count' => $data['meta']['all_count'] ?? count($formatedList)
+                'has_more' => ($rawPayloadCount >= 20) && !$hitCutoffBoundary,
+                'total_count' => count($formatedList)
             ]
         ];
     }
@@ -477,6 +520,12 @@ class ChatwootService {
             for ($i = count($rawMsgs) - 1; $i >= 0; $i--) {
                 $m = $rawMsgs[$i];
                 if (!is_array($m)) continue;
+
+                $createdTs = $this->parseTimestamp($m['created_at'] ?? 0);
+                if ($this->cutoffTimestamp > 0 && $createdTs < $this->cutoffTimestamp) {
+                    break;
+                }
+
                 $type = $m['message_type'] ?? null;
                 $senderType = $m['sender']['type'] ?? ($m['sender_type'] ?? null);
                 $isIncoming = ($senderType === 'contact' || $type === 0 || (string)$type === '0' || $type === 'incoming');
@@ -520,6 +569,13 @@ class ChatwootService {
         $unreadConversationsCount = 0;
         foreach ($payload as $conv) {
             $lastMsg = $conv['last_non_activity_message'] ?? ($conv['messages'][0] ?? null);
+            $lastMsgTime = $lastMsg['created_at'] ?? ($conv['last_activity_at'] ?? $conv['updated_at'] ?? null);
+            $ts = $this->parseTimestamp($lastMsgTime);
+
+            if ($this->cutoffTimestamp > 0 && $ts < $this->cutoffTimestamp) {
+                continue;
+            }
+
             $lastMsgType = $lastMsg['message_type'] ?? null;
             $isIncoming = ($lastMsgType === 0 || (string)$lastMsgType === '0' || $lastMsgType === 'incoming');
             $unreadCount = (int)($conv['unread_count'] ?? 0);
@@ -637,6 +693,10 @@ class ChatwootService {
                 if (!$inboxId && !empty($msg['inbox_id'])) {
                     $inboxId = $msg['inbox_id'];
                 }
+
+                $createdAt = $msg['created_at'] ?? null;
+                $createdAtTs = $this->parseTimestamp($createdAt);
+
                 $msgType = $msg['message_type'] ?? null;
                 $senderType = $msg['sender']['type'] ?? null;
 
@@ -646,13 +706,17 @@ class ChatwootService {
                 }
 
                 $sender = $msg['sender']['name'] ?? ($isIncoming ? 'Cliente' : 'Nosotros');
-                $createdAt = $msg['created_at'] ?? null;
 
                 if ($isIncoming && $createdAt) {
-                    $ts = is_numeric($createdAt) ? (int)$createdAt : strtotime($createdAt);
+                    $ts = $createdAtTs;
                     if (!$lastIncomingTimestamp || $ts > $lastIncomingTimestamp) {
                         $lastIncomingTimestamp = $ts;
                     }
+                }
+
+                // Omitir mensajes anteriores a la fecha de corte (21/08/2026 00:00:00)
+                if ($this->cutoffTimestamp > 0 && $createdAtTs < $this->cutoffTimestamp) {
+                    continue;
                 }
 
                 $mensajes[] = [
@@ -1062,7 +1126,11 @@ class ChatwootService {
                 if (!is_array($m)) continue;
                 $type = $m['message_type'] ?? null;
                 $senderType = $m['sender']['type'] ?? ($m['sender_type'] ?? null);
-                $createdTs = is_numeric($m['created_at'] ?? 0) ? (int)$m['created_at'] : strtotime((string)($m['created_at'] ?? ''));
+                $createdTs = $this->parseTimestamp($m['created_at'] ?? 0);
+
+                if ($this->cutoffTimestamp > 0 && $createdTs < $this->cutoffTimestamp) {
+                    continue;
+                }
 
                 $isOutgoing = ($senderType === 'user' || $type === 1 || (string)$type === '1' || $type === 'outgoing');
                 if ($isOutgoing && $createdTs > $lastOutgoingTs) {
@@ -1076,7 +1144,11 @@ class ChatwootService {
                 if (!is_array($m)) continue;
                 $type = $m['message_type'] ?? null;
                 $senderType = $m['sender']['type'] ?? ($m['sender_type'] ?? null);
-                $createdTs = is_numeric($m['created_at'] ?? 0) ? (int)$m['created_at'] : strtotime((string)($m['created_at'] ?? ''));
+                $createdTs = $this->parseTimestamp($m['created_at'] ?? 0);
+
+                if ($this->cutoffTimestamp > 0 && $createdTs < $this->cutoffTimestamp) {
+                    break;
+                }
 
                 $isIncoming = ($senderType === 'contact' || $type === 0 || (string)$type === '0' || $type === 'incoming');
                 if ($isIncoming) {
