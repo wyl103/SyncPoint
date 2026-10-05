@@ -18,80 +18,272 @@
         border-color: #f59e0b !important;
     }
     </style>
-    <div id="tab-dashboard" class="space-y-6 max-w-4xl mx-auto pb-28 md:pb-8">
-        <div class="flex h-12 items-center rounded-xl bg-gray-200 p-1 mb-4">
-            <label id="lbl-dia" onclick="changeDashView('dia')" class="flex h-full flex-1 cursor-pointer items-center justify-center rounded-lg text-sm font-bold bg-white shadow-sm text-charcoal transition-all">Día</label>
-            <label id="lbl-semana" onclick="changeDashView('semana')" class="flex h-full flex-1 cursor-pointer items-center justify-center rounded-lg text-sm font-semibold text-gray-500 transition-all">Semana</label>
-            <label id="lbl-mes" onclick="changeDashView('mes')" class="flex h-full flex-1 cursor-pointer items-center justify-center rounded-lg text-sm font-semibold text-gray-500 transition-all">Mes</label>
-        </div>
-        
-        <button onclick="abrirModalProgramarRecoleccion()" class="w-full bg-white border border-gray-200 text-charcoal p-3 rounded-xl font-bold shadow-sm hover:bg-gray-50 flex justify-center items-center gap-2 transition">
-            <span class="material-symbols-outlined text-primary">add_circle</span> Programar Recolección
-        </button>
-
-        <div id="dash-dia">
-            <div class="flex justify-between items-end mb-4">
-                <div><h2 class="text-2xl font-bold text-charcoal" id="dia-titulo">Cargando...</h2></div>
-                <div class="flex gap-1 bg-gray-200 p-1 rounded-lg" id="botones-dias-rapidos">
+    <div id="tab-dashboard" class="space-y-5 max-w-6xl mx-auto pb-28 md:pb-8">
+        <!-- Tarjetas KPI Superiores -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- KPI 1: Puntos Confirmados -->
+            <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col justify-between hover:border-slate-300 transition">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Puntos Confirmados</span>
+                        <div class="flex items-baseline gap-1.5 mt-1.5">
+                            <span id="kpi-confirmados-count" class="text-3xl font-extrabold text-slate-900 tracking-tight">0</span>
+                            <span id="kpi-confirmados-total" class="text-xs text-slate-400 font-medium">/ 0 prog.</span>
+                        </div>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center flex-shrink-0">
+                        <span class="material-symbols-outlined text-[22px]">check_circle</span>
+                    </div>
+                </div>
+                <div class="mt-3.5 flex items-center gap-1.5 text-xs text-slate-500">
+                    <span id="kpi-confirmados-badge" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px]">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                        <span id="kpi-confirmados-pct">0.0%</span>
+                    </span>
+                    <span class="truncate">Recolecciones aseguradas</span>
                 </div>
             </div>
 
-            <div class="mb-4 flex justify-between items-center gap-2">
-                <div class="flex items-center gap-2 flex-1 md:flex-none">
-                    <button onclick="toggleFiltros()" class="flex-1 md:flex-none flex items-center justify-center gap-1.5 bg-white border border-gray-200 text-charcoal px-4 py-2 rounded-xl font-bold text-sm shadow-2xs hover:bg-gray-50 transition cursor-pointer">
-                        <span class="material-symbols-outlined text-[18px]">filter_list</span> Filtros
-                    </button>
-                    <button onclick="recargarDiaActual()" class="flex-1 md:flex-none flex items-center justify-center gap-1.5 bg-white border border-gray-200 text-charcoal hover:bg-gray-100 px-3.5 py-2 rounded-xl font-bold text-sm shadow-2xs transition cursor-pointer" title="Volver a consultar eventos">
-                        <span class="material-symbols-outlined text-[18px]">refresh</span>
-                        <span>Actualizar</span>
+            <!-- KPI 2: Denegados / Cancelados (Liberados) -->
+            <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col justify-between hover:border-slate-300 transition">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Denegados / Cancelados</span>
+                        <div class="flex items-baseline gap-1.5 mt-1.5">
+                            <span id="kpi-denegados-count" class="text-3xl font-extrabold text-slate-900 tracking-tight">0</span>
+                            <span class="text-xs text-slate-400 font-medium">liberados</span>
+                        </div>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-slate-50 text-slate-600 border border-slate-200 flex items-center justify-center flex-shrink-0">
+                        <span class="material-symbols-outlined text-[22px]">free_cancellation</span>
+                    </div>
+                </div>
+                <div class="mt-3.5 flex items-center gap-1.5 text-xs text-slate-500">
+                    <span id="kpi-denegados-badge" class="inline-flex items-center px-1.5 py-0.5 rounded font-bold bg-amber-50 text-amber-700 border border-amber-200 text-[10px]">
+                        0 Paradas
+                    </span>
+                    <span class="truncate">Cupos no requeridos</span>
+                </div>
+            </div>
+
+            <!-- KPI 3: Requieren Atención (Chat Manual) -->
+            <div class="bg-amber-50/40 rounded-2xl p-4 border border-amber-200 shadow-xs flex flex-col justify-between hover:border-amber-300 transition ring-1 ring-amber-100">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <span class="text-[11px] font-bold text-amber-700 uppercase tracking-wider block">Requieren Atención</span>
+                        <div class="flex items-baseline gap-1.5 mt-1.5">
+                            <span id="kpi-atencion-count" class="text-3xl font-extrabold text-amber-600 tracking-tight">0</span>
+                            <span class="text-xs text-amber-600/80 font-medium">en revisión</span>
+                        </div>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 border border-amber-200 flex items-center justify-center flex-shrink-0">
+                        <span class="material-symbols-outlined text-[22px]">support_agent</span>
+                    </div>
+                </div>
+                <div class="mt-3.5 flex items-center justify-between text-xs">
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-bold bg-amber-100 text-amber-800 text-[10px]">
+                        <span class="material-symbols-outlined text-[12px]">chat</span>
+                        Chat Manual
+                    </span>
+                    <button type="button" onclick="filtrarRequierenAtencion()" class="text-amber-700 hover:text-amber-900 font-bold text-[11px] flex items-center gap-0.5 transition cursor-pointer">
+                        <span>Ver lista</span>
+                        <span class="material-symbols-outlined text-[13px]">arrow_forward</span>
                     </button>
                 </div>
+            </div>
 
-                <button onclick="descargarExcel()" class="flex-1 md:flex-none flex items-center justify-center gap-1.5 bg-white border border-gray-200 text-black hover:bg-gray-50 px-4 py-2 rounded-xl font-bold text-sm shadow-2xs transition cursor-pointer">
-                    <span class="material-symbols-outlined text-[18px]">download</span> Excel
+            <!-- KPI 4: Automatización WhatsApp -->
+            <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col justify-between hover:border-slate-300 transition">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">ENVÍO MENSAJES</span>
+                        <div class="flex items-baseline gap-1.5 mt-1.5">
+                            <span id="kpi-wa-hora" class="text-3xl font-extrabold text-slate-900 tracking-tight">Activo</span>
+                            <span class="text-xs text-emerald-600 font-bold">Auto</span>
+                        </div>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center flex-shrink-0">
+                        <span class="material-symbols-outlined text-[22px]">mark_chat_read</span>
+                    </div>
+                </div>
+                <div class="mt-3.5 flex items-center justify-between text-xs text-slate-500">
+                    <span id="kpi-wa-info" class="truncate">Programadas hoy: 0</span>
+                    <button onclick="recargarDiaActual()" class="text-slate-400 hover:text-emerald-700 p-0.5 rounded transition" title="Refrescar datos">
+                        <span class="material-symbols-outlined text-[16px]">refresh</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Selector de Rutas & Navegador de Días -->
+        <div class="w-full bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-5">
+            <!-- Selector de Rutas con Filtros y Botón Programar -->
+            <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100">
+                <div class="flex flex-wrap items-center gap-4">
+                    <!-- Filtro de Sucursal (Select con Búsqueda Integrada) -->
+                    <div class="flex items-center gap-2">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Sucursal:</span>
+                        <div class="relative inline-flex items-center" id="contenedor-filtro-sucursal-dropdown">
+                            <!-- Botón disparador del Dropdown Select -->
+                            <button type="button" onclick="toggleDropdownFiltroSucursal(event)" id="btn-filtro-sucursal-select" class="pl-10 pr-8 py-1.5 bg-slate-50 hover:bg-white text-slate-800 text-xs font-semibold rounded-xl border border-slate-200 shadow-2xs focus:ring-2 focus:ring-emerald-500 focus:outline-none focus:bg-white transition flex items-center justify-between gap-2 min-w-[190px] sm:min-w-[210px] cursor-pointer text-left">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-emerald-600">
+                                    <span class="material-symbols-outlined text-[18px]">domain</span>
+                                </div>
+                                <span id="label-filtro-sucursal-actual" class="truncate text-slate-800">Todas las sucursales</span>
+                                <div class="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none text-slate-400">
+                                    <span class="material-symbols-outlined text-[16px]">unfold_more</span>
+                                </div>
+                            </button>
+
+                            <!-- Menú flotante del Select con input de búsqueda y opciones filtrables -->
+                            <div id="menu-filtro-sucursal-opciones" class="hidden absolute top-full left-0 mt-1.5 z-40 w-64 bg-white rounded-2xl border border-slate-200 shadow-xl p-2 flex flex-col gap-1 animate-in fade-in zoom-in-95 duration-150">
+                                <!-- Input buscador dentro del select -->
+                                <div class="relative flex items-center mb-1">
+                                    <span class="material-symbols-outlined absolute left-2.5 text-slate-400 text-[16px] pointer-events-none">search</span>
+                                    <input type="text" id="input-buscar-sucursal-en-select" oninput="alFiltrarOpcionesSucursales(this.value)" placeholder="Escribe para filtrar sucursales..." autocomplete="off" class="w-full pl-8 pr-7 py-1.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                    <button type="button" onclick="limpiarTextoBuscarSucursal()" id="btn-limpiar-busqueda-sucursal" class="hidden absolute right-2 text-slate-400 hover:text-slate-600 cursor-pointer">
+                                        <span class="material-symbols-outlined text-[14px]">close</span>
+                                    </button>
+                                </div>
+
+                                <!-- Lista de opciones clickeables -->
+                                <div id="lista-opciones-sucursales" class="max-h-52 overflow-y-auto space-y-0.5 scrollbar-thin text-xs">
+                                    <!-- Generado dinámicamente -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="h-5 w-px bg-slate-200 hidden sm:block"></div>
+
+                    <!-- Selector de Estado WA -->
+                    <div class="flex items-center gap-2">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Estado WA:</span>
+                        <div class="relative inline-flex items-center">
+                            <select id="filtro-estado-wa" onchange="alCambiarFiltroEstadoWa()" class="px-3 pr-7 py-1.5 bg-slate-50 hover:bg-white text-slate-800 text-xs font-semibold rounded-xl border border-slate-200 shadow-2xs focus:ring-2 focus:ring-emerald-500 focus:outline-none focus:bg-white transition cursor-pointer appearance-none">
+                                <option value="all">Todos los estados</option>
+                                <option value="conf">Confirmados / Aceptados</option>
+                                <option value="wait">En espera / Notificados</option>
+                                <option value="rej">Rechazados / Cancelados</option>
+                                <option value="tent">Tentativas</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none text-slate-400">
+                                <span class="material-symbols-outlined text-[16px]">unfold_more</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones de Acción (Programar Recolección y Exportar Excel) -->
+                <div class="flex items-center gap-2">
+                    <button onclick="descargarExcel()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition shadow-2xs cursor-pointer" title="Exportar CSV/Excel">
+                        <span class="material-symbols-outlined text-[16px] text-slate-500">download</span>
+                        <span>Excel</span>
+                    </button>
+                    <button onclick="abrirModalProgramarRecoleccion()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-xs cursor-pointer">
+                        <span class="material-symbols-outlined text-[16px]">add_circle</span>
+                        <span>Programar</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Navegador de Días (Selector de Mes Compacto + Tira D-0 a D+3) -->
+            <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 pt-1">
+                <!-- Selector de Mes / Fecha Compacto con Popover de Calendario -->
+                <div class="relative flex items-center gap-1.5 flex-shrink-0">
+                    <button onclick="cambiarDiaRelativo(-1)" class="w-7 h-7 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition shadow-2xs cursor-pointer" title="Día anterior">
+                        <span class="material-symbols-outlined text-[16px]">chevron_left</span>
+                    </button>
+                    <div id="selector-mes-compacto" onclick="togglePopoverCalendario()" class="px-3 py-1 bg-slate-50 hover:bg-white border border-slate-200 hover:border-emerald-300 rounded-lg text-center flex items-center gap-1.5 shadow-2xs cursor-pointer transition select-none group" title="Abrir filtro de calendario">
+                        <span class="material-symbols-outlined text-[14px] text-slate-400 group-hover:text-emerald-600 transition">calendar_month</span>
+                        <span id="ticker-mes-label" class="text-[11px] font-bold text-slate-800 group-hover:text-emerald-900 transition">Cargando...</span>
+                    </div>
+                    <button onclick="cambiarDiaRelativo(1)" class="w-7 h-7 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition shadow-2xs cursor-pointer" title="Día siguiente">
+                        <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                    </button>
+
+                    <!-- Popover Filtro Calendario (diseño NewView/filtroCalendario) -->
+                    <div id="datepickerPopover" class="hidden absolute top-10 left-0 z-40 w-[380px] sm:w-[420px] bg-white rounded-2xl border border-slate-200 shadow-2xl p-4 transition-all">
+                        <!-- Cabecera del Popover de Calendario -->
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                            <div class="flex items-center gap-2">
+                                <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold text-xs border border-emerald-100">
+                                    <span class="material-symbols-outlined text-[16px]">calendar_month</span>
+                                </div>
+                                <div>
+                                    <h4 id="cal-popover-mes-titulo" class="text-xs font-bold text-slate-900 leading-tight">Cargando...</h4>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <button type="button" onclick="irAHoyCalendarioPopover()" class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-[10px] font-bold text-slate-700 transition cursor-pointer">
+                                    Hoy
+                                </button>
+                                <button type="button" onclick="navegarMesCalendarioPopover(-1)" class="w-6 h-6 rounded-lg border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-600 transition cursor-pointer" title="Mes anterior">
+                                    <span class="material-symbols-outlined text-[14px]">chevron_left</span>
+                                </button>
+                                <button type="button" onclick="navegarMesCalendarioPopover(1)" class="w-6 h-6 rounded-lg border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-600 transition cursor-pointer" title="Mes siguiente">
+                                    <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Encabezado Días de la Semana -->
+                        <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-400 my-2 uppercase tracking-wider">
+                            <div>Lun</div>
+                            <div>Mar</div>
+                            <div>Mié</div>
+                            <div>Jue</div>
+                            <div>Vie</div>
+                            <div>Sáb</div>
+                            <div>Dom</div>
+                        </div>
+
+                        <!-- Grid de Días del Mes con conteo de puntos -->
+                        <div id="cal-popover-grid-dias" class="grid grid-cols-7 gap-1 text-xs">
+                            <!-- Se renderiza dinámicamente con renderGridCalendarioPopover() -->
+                        </div>
+
+                        <!-- Pie del Popover -->
+                        <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                            <button type="button" onclick="cerrarPopoverCalendario()" class="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 font-semibold text-xs transition cursor-pointer">
+                                Cerrar
+                            </button>
+                            <span id="cal-popover-seleccion-info" class="text-[11px] font-medium text-slate-500 truncate">
+                                Selecciona un día
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Carrusel / Tira de Días (D-0 a D+3) -->
+                <div id="tira-dias-container" class="grid grid-cols-2 sm:grid-cols-4 gap-2 flex-1 min-w-0">
+                    <!-- Se llena dinámicamente con setupTiraDias() -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Encabezado de la Vista de Paradas / Sucursales -->
+        <div class="flex flex-wrap items-center justify-between gap-3 px-1">
+            <div class="flex items-center gap-2 text-xs text-slate-600">
+                <span class="material-symbols-outlined text-[16px] text-emerald-600">domain</span>
+                <span id="rutas-resumen-texto" class="font-semibold text-slate-700">Cargando sucursales...</span>
+                <span class="text-slate-300">•</span>
+                <span id="paradas-resumen-texto" class="text-slate-500 font-medium">0 paradas</span>
+            </div>
+            <div class="flex items-center bg-white border border-slate-200 shadow-2xs rounded-xl p-1 gap-1">
+                <button class="px-3 py-1 rounded-lg bg-white border border-slate-200 shadow-2xs font-bold text-xs text-emerald-700 transition flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[16px] text-emerald-600">table_rows</span>
+                    <span>Tabla Detallada</span>
                 </button>
             </div>
-
-            <div id="panel-filtros" class="hidden mb-6 bg-white p-5 rounded-xl border border-gray-200 shadow-sm transition-all">
-                <h3 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                    <span class="material-symbols-outlined text-[18px] text-primary">tune</span> Opciones de filtrado
-                </h3>
-                
-                <div class="flex flex-col md:flex-row gap-4">
-                    <div class="flex-1">
-                        <label class="block text-xs font-bold text-gray-500 mb-1">Sucursal</label>
-                        <select id="filtro-sucursal" onchange="recargarDiaActual()" class="w-full p-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-700 outline-none focus:border-primary focus:bg-white transition">
-                            <option value="todas">Cargando...</option>
-                        </select>
-                    </div>
-                    
-                    <div class="flex-1">
-                        <label class="block text-xs font-bold text-gray-500 mb-1">Estado</label>
-                        <select id="filtro-estado" onchange="recargarDiaActual()" class="w-full p-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-700 outline-none focus:border-primary focus:bg-white transition">
-                            <option value="todos">Cargando...</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div id="lista-dia" class="space-y-3"></div> 
         </div>
 
-        <div id="dash-semana" class="hidden-view space-y-3">
-            <h2 class="text-xl font-bold mb-4 text-charcoal">Próximos 7 días</h2>
-            <div id="lista-semana" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
-        </div>
-
-        <div id="dash-mes" class="hidden-view">
-            <div class="flex justify-between items-center mb-4">
-                <button onclick="cambiarMes(-1)" class="p-2 bg-white rounded-full shadow-sm"><span class="material-symbols-outlined text-charcoal">chevron_left</span></button>
-                <h2 id="mes-titulo" class="text-xl font-bold text-charcoal">Cargando...</h2>
-                <button onclick="cambiarMes(1)" class="p-2 bg-white rounded-full shadow-sm"><span class="material-symbols-outlined text-charcoal">chevron_right</span></button>
+        <!-- Contenedor de Bloques de Rutas en Tabla -->
+        <div id="contenedor-rutas-eventos" class="space-y-6">
+            <div class="p-12 text-center">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
+                <p class="text-xs text-slate-400 font-semibold mt-3">Cargando eventos de recolección...</p>
             </div>
-            <div class="grid grid-cols-7 gap-1 md:gap-2 mb-2 text-center text-xs font-bold text-gray-400">
-                <div>LUN</div><div>MAR</div><div>MIE</div><div>JUE</div><div>VIE</div><div>SAB</div><div>DOM</div>
-            </div>
-            <div class="grid grid-cols-7 gap-1 md:gap-2" id="grid-mes"></div>
         </div>
     </div>
 

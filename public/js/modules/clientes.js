@@ -20,8 +20,8 @@ function cambiarSubTabCliente(subTab) {
 
     if (!viewDirectorio || !viewSucRutas) return;
 
-    const activeTextClass = 'text-charcoal font-extrabold cursor-pointer hover:text-black transition border-b-2 border-primary pb-0.5';
-    const inactiveTextClass = 'text-gray-400 font-semibold cursor-pointer hover:text-charcoal transition border-b-2 border-transparent pb-0.5';
+    const activeTextClass = 'text-slate-900 font-extrabold cursor-pointer hover:text-emerald-700 transition border-b-2 border-emerald-600 pb-0.5';
+    const inactiveTextClass = 'text-slate-400 font-semibold cursor-pointer hover:text-slate-900 transition border-b-2 border-transparent pb-0.5';
 
     if (subTab === 'directorio') {
         viewDirectorio.classList.remove('hidden-view');
@@ -29,6 +29,7 @@ function cambiarSubTabCliente(subTab) {
 
         if (btnDirectorio) btnDirectorio.className = activeTextClass;
         if (btnSucRutas) btnSucRutas.className = inactiveTextClass;
+        if (typeof actualizarEstilosNavBtns === 'function') actualizarEstilosNavBtns('clientes', 'clientes');
         if (typeof cargarClientes === 'function') cargarClientes();
     } else if (subTab === 'sucursales-rutas') {
         viewDirectorio.classList.add('hidden-view');
@@ -36,6 +37,7 @@ function cambiarSubTabCliente(subTab) {
 
         if (btnSucRutas) btnSucRutas.className = activeTextClass;
         if (btnDirectorio) btnDirectorio.className = inactiveTextClass;
+        if (typeof actualizarEstilosNavBtns === 'function') actualizarEstilosNavBtns('sucursales-rutas', 'clientes');
         if (typeof window.cargarSucursalesYRutas === 'function') {
             window.cargarSucursalesYRutas();
         } else if (typeof cargarSucursalesYRutas === 'function') {
