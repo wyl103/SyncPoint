@@ -33,7 +33,7 @@ try {
 
     echo json_encode([
         'success' => true,
-        'message' => 'Eventos recalculados exitosamente tras cambio de frecuencia',
+        'message' => $resultado['mensaje'] ?? 'Recurrencia recalculada exitosamente',
         'data' => $resultado
     ]);
 } catch (Exception $e) {

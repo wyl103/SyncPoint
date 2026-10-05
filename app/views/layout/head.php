@@ -6,9 +6,14 @@
     <title>OilBless - App</title>
     <base href="/">
 
-    <link href="css/output.css" rel="stylesheet">
+    <link href="css/output.css?v=<?= filemtime(__DIR__ . '/../../../public/css/output.css') ?>" rel="stylesheet">
 
-    <!-- <link href="fontawesome/css/all.min.css" rel="stylesheet"/> -->
+    <!-- Fuentes Google: Plus Jakarta Sans & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Material Symbols Icons -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <style>
         html, body {
@@ -19,7 +24,7 @@
             margin: 0;
             padding: 0;
             overflow: hidden;
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
         }
         
         #view-app {
@@ -71,7 +76,7 @@
             box-sizing: border-box !important;
         }
         .chat-item-row:hover {
-            background-color: #fefce8 !important;
+            background-color: #f8fafc !important;
         }
         .chat-item-row:last-child {
             border-bottom: none !important;
@@ -88,14 +93,14 @@
             height: 44px !important;
             min-height: 44px !important;
             border-radius: 50% !important;
-            background-color: #fef08a !important;
-            color: #2d3436 !important;
+            background-color: #ecfdf5 !important;
+            color: #047857 !important;
             font-weight: 800 !important;
             font-size: 1rem !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            border: 1.5px solid #fde047 !important;
+            border: 1.5px solid #a7f3d0 !important;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
             user-select: none !important;
         }
@@ -165,9 +170,9 @@
         .chat-badge-ruta {
             display: inline-flex !important;
             align-items: center !important;
-            background-color: #fefce8 !important;
-            color: #854d0e !important;
-            border: 1px solid #fef08a !important;
+            background-color: #fffbeb !important;
+            color: #b45309 !important;
+            border: 1px solid #fef3c7 !important;
             font-size: 0.65rem !important;
             font-weight: 700 !important;
             padding: 0.125rem 0.45rem !important;

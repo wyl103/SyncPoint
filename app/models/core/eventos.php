@@ -150,20 +150,29 @@ class Evento {
         return in_array(strtolower($tipo), $permitidos) ? strtolower($tipo) : 'frecuente';
     }
 
-    public static function validarOrigin($origin) {
-        if (!empty($origin) && is_numeric($origin)) {
-            return (int)$origin;
-        }
-        if (!empty($_SESSION['user_id'])) {
-            return (int)$_SESSION['user_id'];
+    public static function validarOrigin($origin, $pdo = null) {
+        if (!empty($origin) && is_numeric($origin) && (int)$origin > 0) {
+            if ($pdo) {
+                try {
+                    $stmt = $pdo->prepare("SELECT id FROM eventos WHERE id = :id");
+                    $stmt->execute(['id' => (int)$origin]);
+                    if ($stmt->fetch()) {
+                        return (int)$origin;
+                    }
+                } catch (Exception $e) {
+                    return null;
+                }
+            } else {
+                return (int)$origin;
+            }
         }
         return null;
     }
 
-    public function create($clienteId, $rutaId, $fechaProgramada, $estado = 'programado', $tipo = 'frecuente', $notificaciones = null, $eventoOrigin = 'user') {
+    public function create($clienteId, $rutaId, $fechaProgramada, $estado = 'programado', $tipo = 'frecuente', $notificaciones = null, $eventoOrigin = null) {
         $estadoValidado = self::validarEstado($estado);
         $tipoValidado = self::validarTipo($tipo);
-        $originValidado = self::validarOrigin($eventoOrigin);
+        $originValidado = self::validarOrigin($eventoOrigin, $this->pdo);
 
         if (is_array($notificaciones) || is_object($notificaciones)) {
             $notifJson = json_encode($notificaciones);
@@ -180,39 +189,21 @@ class Evento {
             ]);
         }
 
-        try {
-            $sql = "INSERT INTO eventos (cliente_id, ruta_id, fecha_programada, estado, tipo, notificaciones, evento_origin, created_at, update_at) 
-                    VALUES (:cliente_id, :ruta_id, :fecha_programada, :estado, :tipo, :notificaciones, :evento_origin, CURRENT_DATE, CURRENT_DATE) 
-                    RETURNING id";
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([
-                'cliente_id' => $clienteId ?: null,
-                'ruta_id' => $rutaId ?: null,
-                'fecha_programada' => $fechaProgramada,
-                'estado' => $estadoValidado,
-                'tipo' => $tipoValidado,
-                'notificaciones' => $notifJson,
-                'evento_origin' => $originValidado
-            ]);
-            $result = $stmt->fetch();
-            return $result ? $result['id'] : true;
-        } catch (Exception $e) {
-            $sql = "INSERT INTO eventos (cliente_id, ruta_id, fecha_programada, estado, tipo, notificaciones, evento_origin, created_at, update_at) 
-                    VALUES (:cliente_id, :ruta_id, :fecha_programada, :estado::text::recolecciones_estado, :tipo, :notificaciones, :evento_origin, CURRENT_DATE, CURRENT_DATE) 
-                    RETURNING id";
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([
-                'cliente_id' => $clienteId ?: null,
-                'ruta_id' => $rutaId ?: null,
-                'fecha_programada' => $fechaProgramada,
-                'estado' => $estadoValidado,
-                'tipo' => $tipoValidado,
-                'notificaciones' => $notifJson,
-                'evento_origin' => $originValidado
-            ]);
-            $result = $stmt->fetch();
-            return $result ? $result['id'] : true;
-        }
+        $sql = "INSERT INTO eventos (cliente_id, ruta_id, fecha_programada, estado, tipo, notificaciones, evento_origin, created_at, update_at) 
+                VALUES (:cliente_id, :ruta_id, :fecha_programada, :estado, :tipo, :notificaciones, :evento_origin, CURRENT_DATE, CURRENT_DATE) 
+                RETURNING id";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            'cliente_id' => $clienteId ?: null,
+            'ruta_id' => $rutaId ?: null,
+            'fecha_programada' => $fechaProgramada,
+            'estado' => $estadoValidado,
+            'tipo' => $tipoValidado,
+            'notificaciones' => $notifJson,
+            'evento_origin' => $originValidado
+        ]);
+        $result = $stmt->fetch();
+        return $result ? $result['id'] : true;
     }
 
     public function update($id, $clienteId = null, $rutaId = null, $fechaProgramada = null, $estado = null, $tipo = null, $notificaciones = null, $eventoOrigin = null) {
@@ -251,7 +242,7 @@ class Evento {
 
         if ($eventoOrigin !== null) {
             $fields[] = "evento_origin = :evento_origin";
-            $params['evento_origin'] = self::validarOrigin($eventoOrigin);
+            $params['evento_origin'] = self::validarOrigin($eventoOrigin, $this->pdo);
         }
 
         $fields[] = "update_at = CURRENT_DATE";
@@ -260,24 +251,9 @@ class Evento {
             return true;
         }
 
-        try {
-            $sql = "UPDATE eventos SET " . implode(', ', $fields) . " WHERE id = :id";
-            $stmt = $this->pdo->prepare($sql);
-            return $stmt->execute($params);
-        } catch (Exception $e) {
-            // Safe fallback if PostgreSQL requires casting to enum
-            $fieldsSql = [];
-            foreach ($fields as $f) {
-                if (strpos($f, 'estado =') !== false) {
-                    $fieldsSql[] = "estado = :estado::text::recolecciones_estado";
-                } else {
-                    $fieldsSql[] = $f;
-                }
-            }
-            $sql = "UPDATE eventos SET " . implode(', ', $fieldsSql) . " WHERE id = :id";
-            $stmt = $this->pdo->prepare($sql);
-            return $stmt->execute($params);
-        }
+        $sql = "UPDATE eventos SET " . implode(', ', $fields) . " WHERE id = :id";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute($params);
     }
 
     public function delete($id) {

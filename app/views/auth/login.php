@@ -15,7 +15,7 @@
                 <label class="block text-sm font-bold text-gray-700">Contraseña</label>
                 <input type="password" id="password" class="mt-1 w-full rounded-lg border-gray-300 p-3 text-sm focus:border-primary focus:ring-primary" required>
             </div>
-            <button type="submit" class="w-full bg-primary font-bold rounded-lg p-3 hover:bg-yellow-400">Ingresar</button>
+            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl p-3 shadow-sm shadow-emerald-600/20 transition cursor-pointer">Ingresar</button>
         </form>
     </div>
 </div>
@@ -42,7 +42,7 @@
                 <label class="block text-sm font-bold text-gray-700">Contraseña</label>
                 <input type="password" id="reg-password" placeholder="••••••••" class="mt-1 w-full rounded-lg border-gray-300 p-3 text-sm focus:border-primary focus:ring-primary" required>
             </div>
-            <button type="submit" id="btn-register-first" class="w-full bg-primary font-bold rounded-lg p-3 hover:bg-yellow-400 transition">Crear Cuenta Administrador</button>
+            <button type="submit" id="btn-register-first" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl p-3 shadow-sm shadow-emerald-600/20 transition cursor-pointer">Crear Cuenta Administrador</button>
         </form>
     </div>
 </div>

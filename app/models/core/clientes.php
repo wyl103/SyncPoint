@@ -96,7 +96,8 @@ class Cliente {
                     r.ciudad AS ruta_ciudad,
                     s.id AS sucursal_id,
                     s.nombre AS sucursal_nombre,
-                    f.nombre AS frecuencia_nombre
+                    f.nombre AS frecuencia_nombre,
+                    f.dias AS frecuencia_dias
                 FROM clientes c
                 LEFT JOIN rutas r ON c.ruta_id = r.id
                 LEFT JOIN sucursales s ON r.fk_sucursal = s.id

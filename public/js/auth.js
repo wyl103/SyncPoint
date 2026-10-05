@@ -171,6 +171,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const userDisplay = document.getElementById('user-name-display');
         if (userDisplay && user) userDisplay.innerText = user.nombre || 'Usuario';
         
+        const userRoleDisplay = document.getElementById('user-role-display');
+        if (userRoleDisplay && user) {
+            const rawTipo = user.tipo || 'Operador Logístico';
+            userRoleDisplay.innerText = rawTipo.charAt(0).toUpperCase() + rawTipo.slice(1);
+        }
+
+        const userAvatarInitials = document.getElementById('user-avatar-initials');
+        if (userAvatarInitials && user) {
+            const parts = (user.nombre || 'US').trim().split(/\s+/);
+            let initials = 'US';
+            if (parts.length >= 2) {
+                initials = (parts[0][0] + parts[1][0]).toUpperCase();
+            } else if (parts.length === 1 && parts[0].length > 0) {
+                initials = parts[0].slice(0, 2).toUpperCase();
+            }
+            userAvatarInitials.innerText = initials;
+        }
+
         // Control de visibilidad del menú Usuarios para Administradores
         const userTipo = (user?.tipo || 'normal').toLowerCase();
         const isAdmin = (userTipo === 'administrador' || userTipo === 'admin');

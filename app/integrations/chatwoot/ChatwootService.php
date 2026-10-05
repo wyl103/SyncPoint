@@ -710,10 +710,11 @@ class ChatwootService {
                             $variantes[] = substr($digits, 2);
                         }
                         $placeholders = implode(',', array_fill(0, count($variantes), '?'));
-                        $stmt = $this->pdo->prepare("SELECT c.id, c.nombre, c.telefono_whatsapp, s.nombre AS sucursal_nombre, r.nombre AS ruta_nombre 
+                        $stmt = $this->pdo->prepare("SELECT c.id, c.nombre, c.telefono_whatsapp, c.fecha_base, c.ruta_id, f.dias AS frecuencia_dias, f.nombre AS frecuencia_nombre, s.nombre AS sucursal_nombre, r.nombre AS ruta_nombre, r.ciudad AS ruta_ciudad 
                                                      FROM clientes c 
                                                      LEFT JOIN rutas r ON c.ruta_id = r.id 
                                                      LEFT JOIN sucursales s ON r.fk_sucursal = s.id 
+                                                     LEFT JOIN frecuencias f ON c.frecuencia_id = f.id 
                                                      WHERE REPLACE(REPLACE(REPLACE(c.telefono_whatsapp, ' ', ''), '-', ''), '+', '') IN ($placeholders) LIMIT 1");
                         $stmt->execute($variantes);
                         $cliente = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -803,13 +804,76 @@ class ChatwootService {
             $is24hExpired = ($diffSeconds > 86400);
         }
 
+        // Buscar evento más próximo o actual del cliente para Panel 3
+        $eventoActual = null;
+        if (!empty($cliente['id'])) {
+            try {
+                $stmtEv = $this->pdo->prepare("SELECT e.id, e.cliente_id, e.ruta_id, e.fecha_programada, e.estado, e.tipo, r.nombre AS ruta_nombre 
+                                               FROM eventos e 
+                                               LEFT JOIN rutas r ON e.ruta_id = r.id 
+                                               WHERE e.cliente_id = :cliente_id 
+                                               ORDER BY (e.fecha_programada >= CURRENT_DATE) DESC, ABS(e.fecha_programada - CURRENT_DATE) ASC, e.id DESC LIMIT 1");
+                $stmtEv->execute(['cliente_id' => $cliente['id']]);
+                $eventoActual = $stmtEv->fetch(PDO::FETCH_ASSOC) ?: null;
+
+                $hoyStr = date('Y-m-d');
+                $hoyTs = strtotime($hoyStr);
+                $necesitaTentativa = false;
+
+                if (!$eventoActual) {
+                    $necesitaTentativa = true;
+                } elseif (strtotime($eventoActual['fecha_programada']) < $hoyTs && in_array(strtolower((string)$eventoActual['estado']), ['completada', 'aceptada', 'cancelada', 'denegada'])) {
+                    $necesitaTentativa = true;
+                }
+
+                if ($necesitaTentativa) {
+                    $fechaTentativa = $hoyStr;
+                    if (!empty($cliente['fecha_base'])) {
+                        $baseTs = strtotime($cliente['fecha_base']);
+                        $dias = (int)($cliente['frecuencia_dias'] ?? 15);
+                        if ($dias <= 0) $dias = 15;
+                        if ($baseTs) {
+                            $diffSec = $hoyTs - $baseTs;
+                            $k = max(0, (int)ceil($diffSec / ($dias * 86400)));
+                            $proximaTs = $baseTs + ($k * $dias * 86400);
+                            $fechaTentativa = date('Y-m-d', $proximaTs);
+
+                            $rutaNom = $cliente['ruta_nombre'] ?? '';
+                            require_once __DIR__ . '/../../services/eventos/EventCalculatorService.php';
+                            $fechaTentativa = EventCalculatorService::ajustarFechaADiaRuta($fechaTentativa, $rutaNom);
+                        }
+                    }
+
+                    $eventoActual = [
+                        'id' => null,
+                        'cliente_id' => $cliente['id'],
+                        'ruta_id' => $cliente['ruta_id'] ?? null,
+                        'fecha_programada' => $fechaTentativa,
+                        'estado' => 'tentativa',
+                        'tipo' => 'tentativa',
+                        'es_tentativa' => true,
+                        'ruta_nombre' => $cliente['ruta_nombre'] ?? 'Sin Ruta'
+                    ];
+                }
+            } catch (Exception $e) {
+                error_log("Error consultando evento cliente para chat: " . $e->getMessage());
+            }
+        }
+
         return [
             'cliente' => [
                 'id' => $cliente['id'] ?? null,
                 'nombre' => $cliente['nombre'] ?? 'Cliente WhatsApp',
                 'telefono_whatsapp' => $cliente['telefono_whatsapp'] ?? '',
+                'ruta_id' => $cliente['ruta_id'] ?? null,
                 'ruta_nombre' => $cliente['ruta_nombre'] ?? 'N/A',
-                'sucursal_nombre' => $cliente['sucursal_nombre'] ?? 'N/A'
+                'sucursal_nombre' => $cliente['sucursal_nombre'] ?? 'N/A',
+                'frecuencia_nombre' => $cliente['frecuencia_nombre'] ?? 'N/A',
+                'frecuencia_dias' => $cliente['frecuencia_dias'] ?? 0,
+                'fecha_base' => $cliente['fecha_base'] ?? null,
+                'ciudad' => $cliente['ruta_ciudad'] ?? 'Ibagué',
+                'estado' => $cliente['estado'] ?? 'Activo',
+                'evento' => $eventoActual
             ],
             'conversation_id' => $conversationId,
             'messages' => $mensajes,
